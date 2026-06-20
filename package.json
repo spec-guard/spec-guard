@@ -21,7 +21,7 @@
     "type": "git",
     "url": "git+https://github.com/spec-guard/spec-guard.git"
   },
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "author": "spec-guard",
   "type": "commonjs",
   "bin": {
