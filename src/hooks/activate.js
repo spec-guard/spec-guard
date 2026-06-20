@@ -6,59 +6,113 @@
 // Runs on every session start:
 //   1. Resolves default mode (on/off) from config/env.
 //   2. If 'off' — removes the flag (statusline hides the badge) and emits nothing.
-//   3. If 'on'  — writes the flag (statusline shows [SPEC-GUARD]) and emits the
-//      spec-guard governance ruleset as hidden SessionStart context, so the
-//      spec-driven workflow is active from the first message — no command needed.
+//   3. If 'on'  — writes the flag (statusline shows [SPEC-GUARD]) and emits the spec-guard
+//      governance ruleset as hidden SessionStart context, so the spec-driven workflow is
+//      active from the first message.
 //
-// Reads SKILL.md at runtime so edits to the source of truth propagate automatically
-// (no hardcoded duplication to go stale).
-//
-// Phase 2 extends skill-path resolution to walk up from the session CWD to the nearest
-// `.spec-guard/config.json` and inject the per-repo rendered skill (with that repo's
-// ${specDir}); if a repo config is found but its rendered skill is missing, it warns and
-// falls back to the global skill rather than silently injecting the wrong spec dir.
+// Skill-path resolution (in order):
+//   a. Per-repo rendered skill: walk up from the session CWD to the nearest
+//      `.spec-guard/config.json`; if found, use that repo's rendered skill (carrying its
+//      ${specDir}). If a repo config IS found but its rendered skill is missing, warn and
+//      fall through to the global skill — never silently inject the wrong spec dir.
+//   b. The global skill installed next to this hook bundle (<agentRoot>/skills/spec-guard).
+//   c. CLAUDE_CONFIG_DIR / ~/.claude global skill (back-compat).
+//   d. A hardcoded one-paragraph fallback.
 
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { getDefaultMode, safeWriteFlag, removeFlag, getFlagPath } = require('./config');
 
-const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
-const flagPath = getFlagPath();
-const skillPath = path.join(claudeDir, 'skills', 'spec-guard', 'SKILL.md');
-
-const mode = getDefaultMode();
-
-if (mode === 'off') {
-  removeFlag(flagPath);
-  process.stdout.write('OK');
-  process.exit(0);
-}
-
-safeWriteFlag(flagPath, 'on');
-
-let skillContent = '';
-try {
-  skillContent = fs.readFileSync(skillPath, 'utf8');
-} catch (e) {
-  process.stdout.write(
-    'SPEC-GUARD ACTIVE\n\n' +
-      'Prime directive: Context before code. Spec before edits. Verify against the spec, not the vibe.\n' +
-      'For any non-trivial change (feature, refactor touching >1 file, schema/API/contract/event change, ' +
-      'bugfix in load-bearing code): ORIENT (read repo CLAUDE.md + governing doc/ADR) -> SPEC -> PLAN -> ' +
-      'BUILD -> VERIFY -> SYNC. Trivial edits skip the loop but still obey anti-regression invariants.'
-  );
-  process.exit(0);
-}
-
-const body = skillContent.replace(/^---[\s\S]*?---\s*/, '');
-
-const output =
+const PREAMBLE =
   'SPEC-GUARD ACTIVE — governance gate engaged for this session.\n\n' +
   'This loads automatically every session (no command needed). Apply it to any non-trivial ' +
   'code work BEFORE writing code. Persistence: stays active across the whole session, including ' +
   'after context compression. The reference files named below load on demand. ' +
-  'To turn it off: run "spec-guard off" (persists across sessions); "spec-guard on" re-enables.\n\n' +
-  body;
+  'To turn it off: run "spec-guard off" (persists across sessions); "spec-guard on" re-enables.\n\n';
 
-process.stdout.write(output);
+const FALLBACK =
+  'SPEC-GUARD ACTIVE\n\n' +
+  'Prime directive: Context before code. Spec before edits. Verify against the spec, not the vibe.\n' +
+  'For any non-trivial change (feature, refactor touching >1 file, schema/API/contract/event change, ' +
+  'bugfix in load-bearing code): ORIENT (read repo CLAUDE.md + governing doc/ADR) -> SPEC -> PLAN -> ' +
+  'BUILD -> VERIFY -> SYNC. Trivial edits skip the loop but still obey anti-regression invariants.';
+
+const REPO_SKILL_LOCATIONS = [
+  '.claude/skills/spec-guard/SKILL.md',
+  '.github/skills/spec-guard/SKILL.md',
+  '.gemini/extensions/spec-guard/skills/spec-guard/SKILL.md',
+];
+
+function findRepoRoot(startDir) {
+  let dir = path.resolve(startDir);
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    try {
+      if (fs.statSync(path.join(dir, '.spec-guard', 'config.json')).isFile()) return dir;
+    } catch (e) {
+      // keep walking
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+// Returns { content, warn } — content is null if no skill file was found.
+function resolveSkill() {
+  // a. Per-repo
+  const repoRoot = findRepoRoot(process.env.CLAUDE_CWD || process.cwd());
+  if (repoRoot) {
+    for (const rel of REPO_SKILL_LOCATIONS) {
+      const p = path.join(repoRoot, rel);
+      try {
+        return { content: fs.readFileSync(p, 'utf8'), warn: null };
+      } catch (e) {
+        // try next location
+      }
+    }
+    // Config found but no rendered skill -> warn, fall through to global.
+    var warn = `SPEC-GUARD: per-repo skill not rendered in ${repoRoot} — run 'spec-guard update' there.\n`;
+  }
+
+  // b. Sibling global (next to this hook bundle: <agentRoot>/hooks/spec-guard/ -> ../../skills/...)
+  const sibling = path.resolve(__dirname, '..', '..', 'skills', 'spec-guard', 'SKILL.md');
+  try {
+    return { content: fs.readFileSync(sibling, 'utf8'), warn: warn || null };
+  } catch (e) {
+    // c. CLAUDE_CONFIG_DIR global
+  }
+
+  const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+  try {
+    return { content: fs.readFileSync(path.join(claudeDir, 'skills', 'spec-guard', 'SKILL.md'), 'utf8'), warn: warn || null };
+  } catch (e) {
+    return { content: null, warn: warn || null };
+  }
+}
+
+function main() {
+  const flagPath = getFlagPath();
+  const mode = getDefaultMode();
+
+  if (mode === 'off') {
+    removeFlag(flagPath);
+    process.stdout.write('OK');
+    return;
+  }
+
+  safeWriteFlag(flagPath, 'on');
+
+  const { content, warn } = resolveSkill();
+  if (warn) process.stderr.write(warn);
+
+  if (!content) {
+    process.stdout.write(FALLBACK);
+    return;
+  }
+  const body = content.replace(/^---[\s\S]*?---\s*/, '');
+  process.stdout.write(PREAMBLE + body);
+}
+
+main();
