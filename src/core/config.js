@@ -109,7 +109,11 @@ function getFlagPath() {
 // Repo-local configuration (`.spec-guard/config.json`)
 // ---------------------------------------------------------------------------
 
-const DEFAULTS = Object.freeze({ specDir: 'docs/specs', plansDir: 'docs/plans' });
+// `ipDir` is the harness-agnostic home for the internal IP knowledge base (troubleshooting,
+// action plans, audits, internal rationale, credentials, internal standards). It is NOT a
+// per-agent dir (.claude/.github/.gemini/.codex are agent *integration*, also non-deliverable
+// but distinct). Default `.private`; configurable per repo.
+const DEFAULTS = Object.freeze({ specDir: 'docs/specs', plansDir: 'docs/plans', ipDir: '.private' });
 
 // Walk up from startDir to the filesystem root looking for `.spec-guard/config.json`.
 // Returns the absolute path to that file, or null.
@@ -153,6 +157,7 @@ function resolveRepoSettings(startDir) {
     root: findRepoRoot(startDir),
     specDir: cfg.specDir || DEFAULTS.specDir,
     plansDir: cfg.plansDir || DEFAULTS.plansDir,
+    ipDir: cfg.ipDir || DEFAULTS.ipDir,
     agents: Array.isArray(cfg.agents) ? cfg.agents : [],
     modules: Array.isArray(cfg.modules) ? cfg.modules : [],
     backupMonorepo: cfg.backupMonorepo === true,

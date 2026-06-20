@@ -18,6 +18,7 @@ function renderVars(settings) {
   return {
     specDir: (settings && settings.specDir) || 'docs/specs',
     plansDir: (settings && settings.plansDir) || 'docs/plans',
+    ipDir: (settings && settings.ipDir) || '.private',
     version: pkg.version,
   };
 }
@@ -172,12 +173,12 @@ function scaffoldProject(repoRoot, vars) {
     'docs/standards',
     'docs/product',
     'docs/templates',
-    '.claude/docs/troubleshootings',
-    '.claude/docs/action_plans',
-    '.claude/docs/audits',
-    '.claude/docs/reviews',
-    '.claude/docs/standards',
-    '.claude/docs/templates',
+    `${vars.ipDir}/docs/troubleshootings`,
+    `${vars.ipDir}/docs/action_plans`,
+    `${vars.ipDir}/docs/audits`,
+    `${vars.ipDir}/docs/reviews`,
+    `${vars.ipDir}/docs/standards`,
+    `${vars.ipDir}/credentials`,
   ];
   for (const d of dirs) fs.mkdirSync(path.join(repoRoot, d), { recursive: true });
 
@@ -201,7 +202,10 @@ function scaffoldProject(repoRoot, vars) {
   writeIfAbsent('docs/templates/plan-template.md', sub('templates/plan-template.md'));
   writeIfAbsent('docs/templates/adr-template.md', sub('templates/adr-template.md'));
   writeIfAbsent('CLAUDE.md', sub('CLAUDE.md'));
-  writeIfAbsent('.claude/.gitignore-hint', '# This .claude/ tree is intellectual property — add `.claude/` to each deliverable repo .gitignore.\n');
+  writeIfAbsent(
+    path.join(vars.ipDir, 'README.md'),
+    `# Internal (not shipped)\n\nThe team's intellectual property — harness-agnostic, read by humans and any AI agent:\ntroubleshooting, action plans, audits, internal rationale, internal standards, and credentials.\nAdd \`${vars.ipDir}/\` to every deliverable repo's .gitignore. Deliverable docs (\`docs/\`) must\nnever link in here.\n`
+  );
 
   return created;
 }

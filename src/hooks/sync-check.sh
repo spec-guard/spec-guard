@@ -8,7 +8,9 @@
 #
 # Stays silent when:
 #   - Only tests/migrations/configs changed
-#   - At least one doc file was also updated
+#   - At least one doc file was also updated (deliverable docs/, the IP knowledge base, or a
+#     rules file). The IP dir is harness-agnostic and configurable; the common defaults plus
+#     legacy .claude/docs are matched.
 #   - Not in a git repo
 
 PROJECT_DIR="${CLAUDE_CWD:-$(pwd)}"
@@ -26,8 +28,9 @@ FUNC_CODE=$(echo "$ALL_CHANGED" | grep -E '\.(py|ts|tsx|js|jsx)$' | \
   grep -v -E '(test_|_test\.|\.test\.|\.spec\.|/tests/|/test/|alembic|versions/|\.config\.|scripts/)' | \
   head -10)
 
-# Docs: IP (.claude/docs/) + deliverables (docs/) + any CLAUDE.md.
-DOCS=$(echo "$ALL_CHANGED" | grep -E '(\.claude/docs/|/docs/|CLAUDE\.md)' | head -1)
+# Docs: deliverables (docs/) + IP knowledge base (.private/ .internal/ .ip/, legacy .claude/docs/)
+# + any rules file (CLAUDE.md / AGENTS.md / GEMINI.md / copilot-instructions.md).
+DOCS=$(echo "$ALL_CHANGED" | grep -E '(/docs/|^docs/|\.private/|\.internal/|\.ip/|\.claude/docs/|CLAUDE\.md|AGENTS\.md|GEMINI\.md|copilot-instructions\.md)' | head -1)
 
 if [ -n "$FUNC_CODE" ] && [ -z "$DOCS" ]; then
   echo "[SPEC-GUARD] Step 6 (SYNC) pending - functional code changed without docs."

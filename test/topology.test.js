@@ -68,16 +68,33 @@ test('already-initialized when .spec-guard/config.json exists', () => {
   fs.rmSync(d, { recursive: true, force: true });
 });
 
-test('wall lint flags .claude hyperlinks at any depth, ignores prose', () => {
+test('wall lint flags hyperlinks into ipDir + agent dirs at any depth, ignores prose', () => {
   const d = tmp();
   const docs = path.join(d, 'docs');
   fs.mkdirSync(path.join(docs, 'reference', 'decisions'), { recursive: true });
-  fs.writeFileSync(path.join(docs, 'ok.md'), 'IP lives in `.claude/docs/` (prose mention, fine).\n');
-  fs.writeFileSync(path.join(docs, 'bad1.md'), 'See [the notes](.claude/docs/x.md).\n');
-  fs.writeFileSync(path.join(docs, 'reference', 'decisions', 'bad2.md'), 'See [notes](../../.claude/docs/y.md).\n');
-  const v = lint.lintRepo(d);
-  assert.strictEqual(v.length, 2);
-  assert.ok(v.every((x) => /bad[12]\.md$/.test(x.file)));
+  fs.writeFileSync(path.join(docs, 'ok.md'), 'IP lives in `.private/` and `.claude/` (prose, fine).\n');
+  fs.writeFileSync(path.join(docs, 'bad1.md'), 'See [notes](.private/docs/x.md) and [skill](.claude/skills/y.md).\n');
+  fs.writeFileSync(path.join(docs, 'reference', 'decisions', 'bad2.md'), 'See [notes](../../.private/docs/y.md).\n');
+  fs.writeFileSync(path.join(docs, 'bad3.md'), 'See [gem](../.gemini/extensions/z.md).\n');
+  const v = lint.lintRepo(d); // default ipDir .private
+  // bad1 (2 lines? one line, matches first) + bad2 + bad3 = 3 files flagged
+  const files = new Set(v.map((x) => path.basename(x.file)));
+  assert.ok(files.has('bad1.md') && files.has('bad2.md') && files.has('bad3.md'));
+  assert.ok(!files.has('ok.md'));
+  // custom ipDir
+  fs.writeFileSync(path.join(docs, 'bad4.md'), 'See [x](.ip/secret.md).\n');
+  const v2 = lint.lintRepo(d, { ipDir: '.ip' });
+  assert.ok(new Set(v2.map((x) => path.basename(x.file))).has('bad4.md'));
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('config resolves ipDir (default .private, overridable)', () => {
+  const config = require('../src/core/config.js');
+  const d = tmp();
+  assert.strictEqual(config.resolveRepoSettings(d).ipDir, '.private');
+  fs.mkdirSync(path.join(d, '.spec-guard'), { recursive: true });
+  fs.writeFileSync(path.join(d, '.spec-guard', 'config.json'), JSON.stringify({ ipDir: '.internal' }));
+  assert.strictEqual(config.resolveRepoSettings(d).ipDir, '.internal');
   fs.rmSync(d, { recursive: true, force: true });
 });
 

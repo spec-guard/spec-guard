@@ -1,15 +1,26 @@
 'use strict';
 
 // IP/deliverable wall lint. The golden rule: deliverable docs (`docs/`) must never link into
-// internal IP (`.claude/`). A violation is a *hyperlink* whose target points at `.claude/` at
-// any `../` depth — e.g. `](.claude/x)`, `](../.claude/x)`, `](../../.claude/x)`. A *prose*
-// mention of the string `.claude/` (e.g. while explaining this very rule) is NOT a violation.
+// NON-deliverable content. Non-deliverable = the internal IP knowledge base (the configurable
+// `ipDir`, default `.private/`) and per-agent integration dirs (`.claude/`, `.codex/`,
+// `.gemini/`). A violation is a *hyperlink* whose target points into one of those at any `../`
+// depth (e.g. `](.private/x)`, `](../.private/x)`, `](.claude/x)`). A *prose* mention of those
+// paths (e.g. while explaining this rule) is NOT a violation.
 
 const fs = require('fs');
 const path = require('path');
 
-// Markdown link target that resolves to .claude/ at any depth.
-const WALL_RE = /\]\((?:\.\.\/)*\.claude\//;
+const DEFAULT_AGENT_DIRS = ['.claude/', '.codex/', '.gemini/'];
+
+function esc(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Build a regex matching a markdown link target into any forbidden dir at any ../ depth.
+function buildWallRegex(forbidden) {
+  const alts = forbidden.map((f) => esc(f.endsWith('/') ? f : f + '/')).join('|');
+  return new RegExp(`\\]\\((?:\\.\\.\\/)*(?:${alts})`);
+}
 
 function walkMarkdown(dir, acc) {
   let entries;
@@ -30,22 +41,28 @@ function walkMarkdown(dir, acc) {
   return acc;
 }
 
-// Lint a single docs directory. Returns [{ file, line, text }].
-function lintDocsDir(docsDir) {
+// Lint a single docs directory against a forbidden-target list. Returns [{ file, line, text }].
+function lintDocsDir(docsDir, forbidden) {
   const violations = [];
   if (!fs.existsSync(docsDir)) return violations;
+  const re = buildWallRegex(forbidden);
   for (const file of walkMarkdown(docsDir, [])) {
     const lines = fs.readFileSync(file, 'utf8').split('\n');
     lines.forEach((text, i) => {
-      if (WALL_RE.test(text)) violations.push({ file, line: i + 1, text: text.trim() });
+      if (re.test(text)) violations.push({ file, line: i + 1, text: text.trim() });
     });
   }
   return violations;
 }
 
-// Lint a repo's deliverable docs tree (default `<root>/docs`).
-function lintRepo(repoRoot, docsRel) {
-  return lintDocsDir(path.join(repoRoot, docsRel || 'docs'));
+// Lint a repo's deliverable docs tree. `opts.ipDir` (default `.private`) + the agent dirs are
+// forbidden link targets.
+function lintRepo(repoRoot, opts) {
+  const options = opts || {};
+  const ipDir = options.ipDir || '.private';
+  const docsRel = options.docsRel || 'docs';
+  const forbidden = [ipDir].concat(DEFAULT_AGENT_DIRS);
+  return lintDocsDir(path.join(repoRoot, docsRel), forbidden);
 }
 
-module.exports = { WALL_RE, lintDocsDir, lintRepo };
+module.exports = { buildWallRegex, lintDocsDir, lintRepo, DEFAULT_AGENT_DIRS };

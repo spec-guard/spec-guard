@@ -32,7 +32,7 @@ function parseFrontmatter(text) {
 }
 
 function defaultVars(extra) {
-  return Object.assign({ version: pkg.version, specDir: 'docs/specs', plansDir: 'docs/plans' }, extra || {});
+  return Object.assign({ version: pkg.version, specDir: 'docs/specs', plansDir: 'docs/plans', ipDir: '.private' }, extra || {});
 }
 
 // Render the skill body for an agent: SKILL.md (substituted) + the agent's overlay (if any).

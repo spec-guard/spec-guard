@@ -115,7 +115,7 @@ test('greenfield --scaffold builds the doc tree; doctor wall is clean (exit 0)',
   const { home, repo, cleanup } = sandbox();
   try {
     sg(home, ['init', repo, '--agent', 'claude-code', '--scaffold', '--spec-dir', 'docs/specs']);
-    for (const f of ['docs/specs/README.md', 'docs/plans/README.md', 'docs/templates/spec-template.md', 'CLAUDE.md', '.claude/docs/troubleshootings']) {
+    for (const f of ['docs/specs/README.md', 'docs/plans/README.md', 'docs/templates/spec-template.md', 'CLAUDE.md', '.private/docs/troubleshootings', '.private/credentials', '.private/README.md']) {
       assert.ok(fs.existsSync(path.join(repo, f)), `missing ${f}`);
     }
     const d = sgStatus(home, ['doctor', repo]);

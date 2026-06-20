@@ -13,8 +13,8 @@ across repo boundaries, not just folder boundaries.
 ├── .git/                        ← root repo (IP-bearing; never delivered)
 ├── service-a/                   ← deliverable repo (own .git, own remote)
 │   ├── .git/
-│   ├── .gitignore               ← excludes .claude/ .env* graphify-out/ (IP never ships)
-│   └── .claude/                 ← IP: present locally + in backup, gitignored in the deliverable
+│   ├── .gitignore               ← excludes ${ipDir}/ .env* agent-dirs graphify-out/ (never ships)
+│   └── ${ipDir}/                ← IP knowledge base: local + in backup, gitignored in the deliverable
 ├── service-b/                   ← deliverable repo (own .git)
 └── ride-along/                  ← no own .git; versioned only via the backup root
 ```
@@ -28,13 +28,14 @@ across repo boundaries, not just folder boundaries.
    `.git_backup` *during* a root commit (so the root can stage module files without nested-repo
    conflicts), then restore it. If you inspect git state, a module's `.git` may momentarily be
    `.git_backup` — tooling must tolerate both.
-3. **IP is gitignored per-module but captured at the root.** `.claude/`, `.env*`, and generated
-   artifacts (e.g. `graphify-out/`) are excluded from each deliverable's `.gitignore` so they
-   never ship — yet they exist on disk and are versioned by the backup root. Do not assume a
-   file is untracked just because the deliverable ignores it.
+3. **IP is gitignored per-module but captured at the root.** The IP knowledge base (`${ipDir}/`),
+   per-agent integration dirs (`.claude/`, `.codex/`, `.gemini/`, `.github/`), `.env*`, and
+   generated artifacts (e.g. `graphify-out/`) are excluded from each deliverable's `.gitignore`
+   so they never ship — yet they exist on disk and are versioned by the backup root. Do not assume
+   a file is untracked just because the deliverable ignores it.
 4. **Ride-along dirs.** Some folders have no own `.git`; they are not separate deliverables and
    ride along only in the backup. If one ever becomes deliverable, add a deliverable `.gitignore`
-   (`.claude/`, `.env*`, generated artifacts) **before** `git init` + push, or IP leaks.
+   (`${ipDir}/`, agent dirs, `.env*`, generated artifacts) **before** `git init` + push, or IP leaks.
 
 ## What this means for the loop
 
@@ -44,4 +45,5 @@ across repo boundaries, not just folder boundaries.
 - **SYNC / commit:** commit inside the affected deliverable repo(s) first, then let the backup
   root capture the state. Committing only at the root leaves the deliverable repos stale.
 - **IP wall:** the wall (see [ip-vs-deliverable.md](ip-vs-deliverable.md)) is enforced per
-  deliverable repo — a `docs/` file in `service-a` must not link into `service-a/.claude/`.
+  deliverable repo — a `docs/` file in `service-a` must not link into `service-a/${ipDir}/` or
+  any of its agent dirs.

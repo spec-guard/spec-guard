@@ -1,4 +1,5 @@
 # Intellectual property — never shipped (the tool whose brand is the IP wall must obey it)
+.private/
 .claude/
 .codex/
 .gemini/

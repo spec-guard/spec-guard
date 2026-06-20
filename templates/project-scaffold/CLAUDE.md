@@ -13,9 +13,12 @@ update `/docs/` when architectural decisions change.
 | Category | Location | Deliverable? |
 |----------|----------|--------------|
 | Project documentation (architecture, API, ADRs, runbooks) | `docs/` | YES |
-| Intellectual property (troubleshooting, action plans, audits, agent templates, credentials) | `.claude/` | NO |
+| IP knowledge base (troubleshooting, action plans, audits, agent templates, credentials) — harness-agnostic | `${ipDir}/` | NO |
+| Per-agent integration (skills, commands, hooks) — generated | `.claude/`, `.codex/`, `.github/`, `.gemini/` | NO |
 
-> Golden rule: `.claude/` MAY reference `docs/`; `docs/` MUST NOT reference `.claude/`.
+> Golden rule: internal MAY reference `docs/`; `docs/` MUST NOT reference internal
+> (`${ipDir}/` or any agent dir). The IP knowledge base lives in `${ipDir}/`, not in a single
+> agent's folder, so multiple agents can be used on this repo at once.
 
 ## Specs & decisions
 
