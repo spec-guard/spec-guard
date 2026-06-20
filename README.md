@@ -102,6 +102,30 @@ specguard setup                                                       # (re)wire
 5. **Something not working?** `specguard doctor` checks install health, repo topology, and the
    IP/deliverable wall, and tells you what to fix.
 
+## Shell completion
+
+Tab-completion for commands, flags, agents, and sub-commands — works on macOS, Linux and Windows:
+
+```bash
+# bash  (macOS/Linux) — add to ~/.bashrc
+eval "$(specguard completion bash)"
+
+# zsh   (macOS default) — add to ~/.zshrc
+eval "$(specguard completion zsh)"
+
+# fish  — write once
+specguard completion fish > ~/.config/fish/completions/specguard.fish
+```
+
+```powershell
+# PowerShell (Windows) — add to $PROFILE
+specguard completion powershell | Out-String | Invoke-Expression
+```
+
+With no argument, `specguard completion` auto-detects your shell from `$SHELL` (PowerShell on
+Windows). The script is generated from the live command surface, so it never goes stale — re-run it
+after an upgrade.
+
 ## The loop
 
 ```
@@ -139,6 +163,7 @@ map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:s
 | `commit [--all] [--scope …] [--graphify] -m …` | Commit a message **you** author (validated as Conventional, AI attribution stripped), single repo or across the backup monorepo; `--graphify` refreshes the knowledge graph first |
 | `migrate [--apply]` | Transitional: upgrade an old-model repo to the current layout |
 | `self check\|upgrade\|rollback` | Update the CLI itself |
+| `completion <bash\|zsh\|fish\|powershell>` | Print a shell-completion script (auto-detects the shell if omitted) |
 | `status` · `toggle on\|off` (aliases `on`/`off`) | Show state · governance switch |
 
 ### Common flags
@@ -157,7 +182,7 @@ map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:s
 | `--global` | `uninstall` | Operate on the machine, not a repo |
 | `--purge` | `uninstall --global` | Also forget preferences (XDG config + the on/off flag) |
 | `--dry-run` | `uninstall` | Print the plan and change nothing |
-| `--force` | `init`, `update` | Overwrite even user-edited owned files (skips the sidecar guard) |
+| `--force` | `init`, `update`, `setup` | Overwrite even user-edited owned files (skips the sidecar guard) |
 | `--apply` | `migrate` | Apply the migration (otherwise dry-run) |
 
 ## Uninstall

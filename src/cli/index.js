@@ -17,6 +17,7 @@ const COMMANDS = {
   on: { summary: 'Enable spec-guard (persists across sessions).' },
   off: { summary: 'Disable spec-guard (persists across sessions).' },
   setup: { summary: "Wire this machine's agent session hooks + statusline (the machine-scoped counterpart to init)." },
+  completion: { summary: 'Print a shell-completion script: completion <bash|zsh|fish|powershell>.' },
   uninstall: { summary: 'Remove spec-guard from a repo, or --global from this machine (--purge, --dry-run).' },
   migrate: { summary: 'Transitional: upgrade an old-model repo (.claude IP, docs/superpowers) to the current layout. Dry-run unless --apply.' },
   commit: { summary: 'Commit the loop result: validate Conventional Commit (no AI attribution), current repo or --all/--scope across the backup monorepo.' },
