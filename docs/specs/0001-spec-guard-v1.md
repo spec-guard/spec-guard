@@ -15,7 +15,8 @@ without losing the governance.
 ## In-Scope
 
 - A Node/npm CLI `@spec-guard/cli` with `init`, `update`, `self`, `status`, `doctor`,
-  `toggle`, `install --global`.
+  `toggle`, `install --global`, `uninstall` (per-repo + `--global`/`--purge`), `commit`,
+  and `migrate`.
 - Single-source skill + command set, **rendered per agent** for Claude Code, Codex,
   GitHub Copilot, and Gemini CLI (skill, slash commands, lifecycle hooks, and a managed
   rules-file block per agent).

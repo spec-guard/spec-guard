@@ -170,6 +170,77 @@ test('self-dogfood: init in an @spec-guard/cli repo skips the rules-block', () =
   }
 });
 
+test('uninstall removes owned files, strips the rules block, and keeps user content', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code,gemini', '--spec-dir', 'docs/specs']);
+    // user authored content around our managed block + their own spec
+    const claudeMd = path.join(repo, 'CLAUDE.md');
+    fs.writeFileSync(claudeMd, '# My Project\n\nHand-written rules.\n\n' + fs.readFileSync(claudeMd, 'utf8'));
+    fs.mkdirSync(path.join(repo, 'docs/specs'), { recursive: true });
+    fs.writeFileSync(path.join(repo, 'docs/specs/0001-mine.md'), '# my spec\n');
+
+    sg(home, ['uninstall', repo]);
+
+    // owned artifacts gone
+    for (const f of [
+      '.claude/skills/spec-guard', '.claude/commands/spec', '.claude/commands/spec.md',
+      '.gemini/extensions/spec-guard', '.spec-guard',
+    ]) assert.ok(!fs.existsSync(path.join(repo, f)), `should be removed: ${f}`);
+
+    // rules block stripped, user content preserved
+    const md = fs.readFileSync(claudeMd, 'utf8');
+    assert.match(md, /# My Project/);
+    assert.match(md, /Hand-written rules\./);
+    assert.doesNotMatch(md, /spec-guard:start/);
+
+    // user docs untouched
+    assert.ok(fs.existsSync(path.join(repo, 'docs/specs/0001-mine.md')), 'user spec preserved');
+  } finally {
+    cleanup();
+  }
+});
+
+test('uninstall --dry-run changes nothing', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code']);
+    const out = sg(home, ['uninstall', repo, '--dry-run']);
+    assert.match(out, /dry-run/);
+    assert.ok(fs.existsSync(path.join(repo, '.claude/skills/spec-guard/SKILL.md')), 'still present after dry-run');
+    assert.ok(fs.existsSync(path.join(repo, '.spec-guard')), '.spec-guard still present after dry-run');
+  } finally {
+    cleanup();
+  }
+});
+
+test('uninstall --global unwires hooks and preserves co-tenant entries', () => {
+  const { home, cleanup } = sandbox();
+  try {
+    // seed a co-tenant hook
+    fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+    fs.writeFileSync(path.join(home, '.claude/settings.json'),
+      JSON.stringify({ hooks: { SessionStart: [{ hooks: [{ type: 'command', command: 'node "/x/caveman.js"' }] }] } }, null, 2));
+
+    sg(home, ['install', '--global']);
+    let s = JSON.parse(fs.readFileSync(path.join(home, '.claude/settings.json'), 'utf8'));
+    assert.strictEqual(jm.countOwned(s, 'SessionStart'), 1, 'installed');
+
+    sg(home, ['uninstall', '--global']);
+    s = JSON.parse(fs.readFileSync(path.join(home, '.claude/settings.json'), 'utf8'));
+    assert.strictEqual(jm.countOwned(s, 'SessionStart'), 0, 'spec-guard SessionStart unwired');
+    assert.strictEqual(jm.countOwned(s, 'Stop'), 0, 'spec-guard Stop unwired');
+    const cmds = (s.hooks && s.hooks.SessionStart ? s.hooks.SessionStart : []).flatMap((g) => g.hooks.map((h) => h.command));
+    assert.ok(cmds.some((c) => c.includes('caveman')), 'co-tenant caveman preserved');
+
+    // global skill + hook bundle removed
+    assert.ok(!fs.existsSync(path.join(home, '.claude/skills/spec-guard')), 'global skill removed');
+    assert.ok(!fs.existsSync(path.join(home, '.claude/hooks/spec-guard')), 'hook bundle removed');
+  } finally {
+    cleanup();
+  }
+});
+
 test('update protects a user-edited owned file with a sidecar', () => {
   const { home, repo, cleanup } = sandbox();
   try {

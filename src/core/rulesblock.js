@@ -49,4 +49,16 @@ function upsert(fileContent, body) {
   return text + sep + block + '\n';
 }
 
-module.exports = { START, END, buildBody, wrap, extract, hasBlock, upsert };
+// Remove the managed block entirely (used by uninstall). Strips the delimited region and
+// tidies the whitespace it leaves behind; surrounding user content is preserved. Returns the
+// new full content (empty string if nothing but the block remained).
+function remove(fileContent) {
+  const text = fileContent || '';
+  if (!hasBlock(text)) return text;
+  let next = text.replace(BLOCK_RE, '');
+  next = next.replace(/\n{3,}/g, '\n\n'); // collapse the gap left behind
+  if (!next.trim()) return '';
+  return next.replace(/\s*$/, '\n'); // single trailing newline
+}
+
+module.exports = { START, END, buildBody, wrap, extract, hasBlock, upsert, remove };
