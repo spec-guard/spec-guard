@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.0...cli-v0.3.1) (2026-06-20)
+
+
+### Bug Fixes
+
+* clearer init messaging for re-init, already-wired machine, and owned-file divergence ([163c889](https://github.com/spec-guard/spec-guard/commit/163c8895b07817ceb903ae8a879a970514386820))
+
 ## [0.3.0](https://github.com/spec-guard/spec-guard/compare/cli-v0.2.0...cli-v0.3.0) (2026-06-20)
 
 
