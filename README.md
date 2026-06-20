@@ -60,9 +60,14 @@ If neither applies to you, you can ignore `.private/`, `--scope`, and `--all` en
 ## Install
 
 ```bash
-npm install -g @spec-guard/cli      # or run ad-hoc with: npx @spec-guard/cli <command>
-specguard init .                    # one command: pick agents, set up the project, offer to wire the machine
+npm install -g @spec-guard/cli      # or skip the global install entirely (next line)
+npx @spec-guard/cli init .          # always works immediately — no PATH/shell refresh needed
 ```
+
+> **`specguard: command not found` right after the global install?** That's your shell's command
+> cache, not a spec-guard problem — a new global binary isn't visible to the *running* shell until
+> it rehashes. Fix it without reopening the terminal: run **`hash -r`** (bash) or **`rehash`** (zsh).
+> Or just use `npx @spec-guard/cli …` for the first run, which never depends on `PATH`.
 
 `init` is the single front door — on a TTY it prompts for which agents to set up and offers to wire
 this machine's session hooks; pass flags to skip the prompts in CI:
