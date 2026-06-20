@@ -1,8 +1,12 @@
 name: release
 
-# Fires when release-please publishes a GitHub Release (not on raw tag pushes,
-# and not 'released' which only covers pre-release -> stable promotion).
+# Manual publish fallback. The primary publish runs inside release-please.yml gated on
+# release_created (a release-please release is created by GITHUB_TOKEN, whose events do not
+# trigger other workflows). This workflow stays as a manual safety valve — run it from the
+# Actions tab / `gh workflow run release.yml` to (re)publish whatever version is on main.
+# `release: published` is kept for manually-created GitHub Releases (a human PAT fires it).
 on:
+  workflow_dispatch:
   release:
     types: [published]
 

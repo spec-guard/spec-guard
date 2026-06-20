@@ -13,7 +13,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # Publish to npm in THIS workflow when release-please cut a release. A release created by
+      # release-please runs as GITHUB_TOKEN, whose events do not trigger other workflows
+      # (GitHub's recursion guard), so a separate release-triggered publish would never fire.
+      # Gating the publish on release_created here is the supported pattern.
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+      - uses: actions/setup-node@v4
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - if: ${{ steps.release.outputs.release_created }}
+        run: npm ci || npm install
+      - if: ${{ steps.release.outputs.release_created }}
+        run: npm test
+      - if: ${{ steps.release.outputs.release_created }}
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
