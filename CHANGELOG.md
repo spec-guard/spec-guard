@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/spec-guard/spec-guard/compare/cli-v0.2.0...cli-v0.3.0) (2026-06-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* the CLI binary is now `specguard` (was `spec-guard`); machine wiring moved from `install --global` to `setup`.
+
+### Features
+
+* specguard binary + single init front door, graph-sync before commit ([6122071](https://github.com/spec-guard/spec-guard/commit/61220712672aea465870d1786ed9342bd3e47e4f))
+
 ## [0.2.0](https://github.com/spec-guard/spec-guard/compare/cli-v0.1.0...cli-v0.2.0) (2026-06-20)
 
 
