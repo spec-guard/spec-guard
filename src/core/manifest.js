@@ -42,6 +42,12 @@ function record(manifest, key, h, extra) {
   manifest.files[key] = Object.assign({ hash: h }, extra || {});
 }
 
+// Remove a now-stale `<file>.spec-guard-update` sidecar (best-effort). Called once the target file
+// is reconciled (created/unchanged/updated) so accepted/forced updates don't leave litter behind.
+function clearSidecar(absPath) {
+  try { fs.unlinkSync(`${absPath}.spec-guard-update`); } catch (e) { /* none — fine */ }
+}
+
 // Whole-file owned write. Returns action: created | unchanged | updated | diverged.
 function writeManaged({ absPath, content, manifest, key, force }) {
   fs.mkdirSync(path.dirname(absPath), { recursive: true });
@@ -50,6 +56,7 @@ function writeManaged({ absPath, content, manifest, key, force }) {
   if (!fs.existsSync(absPath)) {
     fs.writeFileSync(absPath, content);
     record(manifest, key, newHash);
+    clearSidecar(absPath);
     return { action: 'created', absPath };
   }
 
@@ -59,6 +66,7 @@ function writeManaged({ absPath, content, manifest, key, force }) {
 
   if (currentHash === newHash) {
     record(manifest, key, newHash);
+    clearSidecar(absPath); // reconciled by hand → drop the stale sidecar
     return { action: 'unchanged', absPath };
   }
 
@@ -71,6 +79,7 @@ function writeManaged({ absPath, content, manifest, key, force }) {
 
   fs.writeFileSync(absPath, content);
   record(manifest, key, newHash);
+  clearSidecar(absPath); // accepted/forced → the sidecar is now redundant
   return { action: 'updated', absPath };
 }
 

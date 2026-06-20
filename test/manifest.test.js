@@ -44,6 +44,30 @@ test('writeManaged: created, unchanged, then user-edit -> sidecar (no clobber)',
   assert.ok(fs.existsSync(file + '.spec-guard-update'));
   assert.strictEqual(fs.readFileSync(file + '.spec-guard-update', 'utf8'), 'v2\n');
 
+  // Accepting the update with --force reconciles the file AND clears the stale sidecar.
+  r = manifest.writeManaged({ absPath: file, content: 'v2\n', manifest: m, key: 'skill', force: true });
+  assert.strictEqual(r.action, 'updated');
+  assert.ok(!fs.existsSync(file + '.spec-guard-update'), 'stale sidecar auto-removed after reconcile');
+
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('writeManaged: a hand-reconciled file (now matching) also clears the sidecar', () => {
+  const dir = tmp();
+  const m = manifest.emptyManifest();
+  const file = path.join(dir, 'skill.md');
+
+  manifest.writeManaged({ absPath: file, content: 'v1\n', manifest: m, key: 'skill' });
+  fs.writeFileSync(file, 'edited\n');
+  manifest.writeManaged({ absPath: file, content: 'v2\n', manifest: m, key: 'skill' }); // diverged -> sidecar
+  assert.ok(fs.existsSync(file + '.spec-guard-update'));
+
+  // User hand-applies v2; next render sees the file already matches -> unchanged + sidecar cleared.
+  fs.writeFileSync(file, 'v2\n');
+  const r = manifest.writeManaged({ absPath: file, content: 'v2\n', manifest: m, key: 'skill' });
+  assert.strictEqual(r.action, 'unchanged');
+  assert.ok(!fs.existsSync(file + '.spec-guard-update'), 'sidecar cleared once file matches');
+
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
