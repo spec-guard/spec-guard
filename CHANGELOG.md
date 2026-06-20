@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.1...cli-v0.3.2) (2026-06-20)
+
+
+### Bug Fixes
+
+* auto-remove stale .spec-guard-update sidecar once the file is reconciled ([c0d8dce](https://github.com/spec-guard/spec-guard/commit/c0d8dce16c43d3fd7f4ee1b374fe90a0b34d6e8b))
+
 ## [0.3.1](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.0...cli-v0.3.1) (2026-06-20)
 
 
