@@ -1,0 +1,6 @@
+{
+  "name": "spec-guard",
+  "version": "${version}",
+  "description": "Spec-driven development governance: context before code, spec before edits, verify against the spec.",
+  "contextFileName": "GEMINI.md"
+}

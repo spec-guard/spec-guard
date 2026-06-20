@@ -105,8 +105,74 @@ function getFlagPath() {
   return path.join(claudeDir, '.spec-guard-active');
 }
 
+// ---------------------------------------------------------------------------
+// Repo-local configuration (`.spec-guard/config.json`)
+// ---------------------------------------------------------------------------
+
+const DEFAULTS = Object.freeze({ specDir: 'docs/specs', plansDir: 'docs/plans' });
+
+// Walk up from startDir to the filesystem root looking for `.spec-guard/config.json`.
+// Returns the absolute path to that file, or null.
+function findRepoConfigPath(startDir) {
+  let dir = path.resolve(startDir || process.cwd());
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const candidate = path.join(dir, '.spec-guard', 'config.json');
+    try {
+      if (fs.statSync(candidate).isFile()) return candidate;
+    } catch (e) {
+      // not here — keep walking
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+// The repo root is the directory CONTAINING `.spec-guard/` (one level above the config file).
+function findRepoRoot(startDir) {
+  const cfg = findRepoConfigPath(startDir);
+  return cfg ? path.dirname(path.dirname(cfg)) : null;
+}
+
+function readRepoConfig(startDir) {
+  const cfgPath = findRepoConfigPath(startDir);
+  if (!cfgPath) return null;
+  try {
+    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+  } catch (e) {
+    return null;
+  }
+}
+
+// Resolved settings for a repo: repo-local config merged over defaults.
+// `root` is the repo root if an `.spec-guard/config.json` was found, else null.
+function resolveRepoSettings(startDir) {
+  const cfg = readRepoConfig(startDir) || {};
+  return {
+    root: findRepoRoot(startDir),
+    specDir: cfg.specDir || DEFAULTS.specDir,
+    plansDir: cfg.plansDir || DEFAULTS.plansDir,
+    agents: Array.isArray(cfg.agents) ? cfg.agents : [],
+    modules: Array.isArray(cfg.modules) ? cfg.modules : [],
+    backupMonorepo: cfg.backupMonorepo === true,
+  };
+}
+
+function writeRepoConfig(repoRoot, settings) {
+  const dir = path.join(repoRoot, '.spec-guard');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, 'config.json');
+  let existing = {};
+  try { existing = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) {}
+  const merged = Object.assign({}, existing, settings);
+  fs.writeFileSync(file, JSON.stringify(merged, null, 2) + '\n');
+  return file;
+}
+
 module.exports = {
   VALID_MODES,
+  DEFAULTS,
   getConfigDir,
   getConfigPath,
   readGlobalConfig,
@@ -115,4 +181,9 @@ module.exports = {
   safeWriteFlag,
   removeFlag,
   getFlagPath,
+  findRepoConfigPath,
+  findRepoRoot,
+  readRepoConfig,
+  resolveRepoSettings,
+  writeRepoConfig,
 };

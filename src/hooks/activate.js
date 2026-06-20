@@ -21,7 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { getDefaultMode, safeWriteFlag, removeFlag, getFlagPath } = require('../core/config');
+const { getDefaultMode, safeWriteFlag, removeFlag, getFlagPath } = require('./config');
 
 const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
 const flagPath = getFlagPath();
