@@ -5,10 +5,18 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { execFileSync, spawnSync } = require('node:child_process');
 
 const BIN = path.join(__dirname, '..', 'bin', 'spec-guard.js');
 const jm = require('../src/core/jsonmerge');
+
+function sgStatus(home, args) {
+  const r = spawnSync('node', [BIN, ...args], {
+    encoding: 'utf8',
+    env: Object.assign({}, process.env, { SPEC_GUARD_HOME: home }),
+  });
+  return { stdout: r.stdout, stderr: r.stderr, status: r.status };
+}
 
 function sandbox() {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-home-'));
@@ -98,6 +106,58 @@ test('install --global is idempotent', () => {
     sg(home, ['install', '--global']);
     const out = sg(home, ['install', '--global']);
     assert.match(out, /SessionStart noop/);
+  } finally {
+    cleanup();
+  }
+});
+
+test('greenfield --scaffold builds the doc tree; doctor wall is clean (exit 0)', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code', '--scaffold', '--spec-dir', 'docs/specs']);
+    for (const f of ['docs/specs/README.md', 'docs/plans/README.md', 'docs/templates/spec-template.md', 'CLAUDE.md', '.claude/docs/troubleshootings']) {
+      assert.ok(fs.existsSync(path.join(repo, f)), `missing ${f}`);
+    }
+    const d = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d.status, 0, 'doctor exit 0 on clean wall');
+    assert.match(d.stdout, /wall: clean/);
+  } finally {
+    cleanup();
+  }
+});
+
+test('doctor exits 2 when a docs/ file hyperlinks into .claude/', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code']);
+    fs.mkdirSync(path.join(repo, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(repo, 'docs/bad.md'), 'See [secret](../.claude/docs/x.md).\n');
+    const d = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d.status, 2, 'wall violation -> exit 2');
+    assert.match(d.stdout, /wall: 1 violation/);
+  } finally {
+    cleanup();
+  }
+});
+
+test('brownfield init (no --scaffold) does not create a docs tree', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code']);
+    assert.ok(!fs.existsSync(path.join(repo, 'docs/templates')), 'no scaffold without --scaffold');
+  } finally {
+    cleanup();
+  }
+});
+
+test('self-dogfood: init in an @spec-guard/cli repo skips the rules-block', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    fs.writeFileSync(path.join(repo, 'package.json'), JSON.stringify({ name: '@spec-guard/cli' }));
+    fs.writeFileSync(path.join(repo, 'AGENTS.md'), '# handcrafted\n');
+    sg(home, ['init', repo, '--agent', 'codex']);
+    const agentsMd = fs.readFileSync(path.join(repo, 'AGENTS.md'), 'utf8');
+    assert.strictEqual(agentsMd, '# handcrafted\n', 'AGENTS.md untouched in self-dogfood');
   } finally {
     cleanup();
   }
