@@ -56,12 +56,16 @@ function installCommands(agent, ctx, vars, m, keyspace, force) {
   const actions = [];
   for (const tpl of render.listCommandTemplates()) {
     const out = render.renderCommand(tpl, agent.commands.format, vars);
+    // The bare-`/spec` umbrella sits at the namespace root. For agents that namespace via a
+    // dedicated subdir (claude, gemini) that is one level up from the command dir; flat-prefix
+    // agents keep it in the command dir (the `spec-` prefix was already dropped in render).
+    const destDir = out.umbrella && agent.commands.namespaced ? path.dirname(dir) : dir;
     actions.push(
       manifest.writeManaged({
-        absPath: path.join(dir, out.filename),
+        absPath: path.join(destDir, out.filename),
         content: out.content,
         manifest: m,
-        key: `${keyspace}:cmd:${agent.id}:${out.filename}`,
+        key: `${keyspace}:cmd:${agent.id}:${out.umbrella ? 'umbrella:' : ''}${out.filename}`,
         force,
       })
     );

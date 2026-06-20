@@ -48,8 +48,9 @@ spec-guard init .                    # install into a project
 6. SYNC    — update docs/contracts/cross-references; commit
 ```
 
-Slash commands map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`,
-`/spec:status`, `/spec:commit`.
+Run `/spec` for the umbrella — it prints the loop and shows where the task stands. The phases
+map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:status`,
+`/spec:commit`.
 
 ## Supported agents
 

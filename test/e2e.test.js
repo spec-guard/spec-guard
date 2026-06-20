@@ -39,17 +39,24 @@ test('init installs all four agents and global wiring is single-entry', () => {
     const expect = [
       path.join(repo, '.claude/skills/spec-guard/SKILL.md'),
       path.join(repo, '.claude/commands/spec/orient.md'),
+      path.join(repo, '.claude/commands/spec.md'), // bare /spec umbrella at namespace root
       path.join(home, '.codex/skills/spec-guard/SKILL.md'),
       path.join(repo, '.github/skills/spec-guard/SKILL.md'),
       path.join(repo, '.github/prompts/spec-orient.prompt.md'),
+      path.join(repo, '.github/prompts/spec.prompt.md'), // /spec umbrella (flat)
       path.join(repo, '.gemini/extensions/spec-guard/skills/spec-guard/SKILL.md'),
       path.join(repo, '.gemini/extensions/spec-guard/commands/spec/orient.toml'),
+      path.join(repo, '.gemini/extensions/spec-guard/commands/spec.toml'), // /spec umbrella
       path.join(repo, 'CLAUDE.md'),
       path.join(repo, 'AGENTS.md'),
       path.join(repo, '.github/copilot-instructions.md'),
       path.join(repo, 'GEMINI.md'),
     ];
     for (const f of expect) assert.ok(fs.existsSync(f), `missing ${f}`);
+
+    // the umbrella must NOT be double-namespaced into the phase-command subdir
+    assert.ok(!fs.existsSync(path.join(repo, '.claude/commands/spec/spec.md')),
+      'umbrella must not land in the phase-command subdir');
 
     // rendered content: specDir substituted, no leaks
     const skill = fs.readFileSync(path.join(repo, '.claude/skills/spec-guard/SKILL.md'), 'utf8');

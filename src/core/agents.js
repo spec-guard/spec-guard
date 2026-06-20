@@ -20,7 +20,7 @@ const AGENTS = {
     id: 'claude-code',
     skill: { scope: 'repo', dir: '.claude/skills/spec-guard' },
     globalSkillDir: '.claude/skills/spec-guard', // under home, the fallback skill
-    commands: { dir: '.claude/commands/spec', format: 'claude-md' },
+    commands: { dir: '.claude/commands/spec', format: 'claude-md', namespaced: true },
     rulesFile: 'CLAUDE.md',
     hooks: { kind: 'claude-settings', scope: 'home', configPath: '.claude/settings.json', events: ['SessionStart', 'Stop'] },
   },
@@ -54,7 +54,7 @@ const AGENTS = {
     extension: true,
     extensionDir: '.gemini/extensions/spec-guard',
     skill: { scope: 'repo', dir: '.gemini/extensions/spec-guard/skills/spec-guard' },
-    commands: { dir: '.gemini/extensions/spec-guard/commands/spec', format: 'gemini-toml' },
+    commands: { dir: '.gemini/extensions/spec-guard/commands/spec', format: 'gemini-toml', namespaced: true },
     rulesFile: 'GEMINI.md',
     hooks: { kind: 'gemini-extension', scope: 'repo', configPath: '.gemini/extensions/spec-guard/hooks/hooks.json', events: ['SessionStart', 'Stop'] },
   },

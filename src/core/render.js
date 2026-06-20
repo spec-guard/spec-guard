@@ -78,27 +78,38 @@ function renderCommand(templatePath, format, vars) {
   const description = attrs.description || '';
   const trimmedBody = body.replace(/^\s+|\s+$/g, '') + '\n';
 
+  // An umbrella command is the bare namespace root (`/spec`), not a phase subcommand
+  // (`/spec:orient`). Namespaced agents (claude, gemini) place it one dir up from the
+  // command dir; flat-prefix agents (copilot, opencode) drop the `spec-` prefix so it
+  // renders as `/spec` instead of `/spec-spec`. The installer routes the directory; here
+  // we only emit the correct filename and flag it.
+  const umbrella = String(attrs.umbrella || '').toLowerCase() === 'true';
+
   switch (format) {
     case 'claude-md':
       return {
         filename: `${id}.md`,
         content: `---\ndescription: ${description}\n---\n\n${trimmedBody}`,
+        umbrella,
       };
     case 'copilot-prompt':
       return {
-        filename: `spec-${id}.prompt.md`,
+        filename: umbrella ? `${id}.prompt.md` : `spec-${id}.prompt.md`,
         content: `---\ndescription: ${description}\n---\n\n${trimmedBody}`,
+        umbrella,
       };
     case 'opencode-md':
       // opencode custom command: a markdown file; filename (sans .md) is the command id.
       return {
-        filename: `spec-${id}.md`,
+        filename: umbrella ? `${id}.md` : `spec-${id}.md`,
         content: `---\ndescription: ${description}\n---\n\n${trimmedBody}`,
+        umbrella,
       };
     case 'gemini-toml':
       return {
         filename: `${id}.toml`,
         content: `description = "${tomlEscapeBasic(description)}"\nprompt = """\n${trimmedBody}"""\n`,
+        umbrella,
       };
     default:
       throw new Error(`unknown command format: ${format}`);

@@ -35,6 +35,32 @@ test('renderCommand emits the right filename + format per agent', () => {
   assert.match(gemini.content, /"""\n$/);
 });
 
+test('renderCommand routes the umbrella (/spec) to the namespace root per format', () => {
+  const tpl = path.join(render.PKG_ROOT, 'templates', 'commands', 'spec.md');
+
+  const claude = render.renderCommand(tpl, 'claude-md', {});
+  assert.strictEqual(claude.filename, 'spec.md');
+  assert.strictEqual(claude.umbrella, true);
+
+  const gemini = render.renderCommand(tpl, 'gemini-toml', {});
+  assert.strictEqual(gemini.filename, 'spec.toml');
+  assert.strictEqual(gemini.umbrella, true);
+
+  // flat-prefix agents drop the `spec-` prefix so it is /spec, not /spec-spec
+  const copilot = render.renderCommand(tpl, 'copilot-prompt', {});
+  assert.strictEqual(copilot.filename, 'spec.prompt.md');
+  assert.strictEqual(copilot.umbrella, true);
+
+  const opencode = render.renderCommand(tpl, 'opencode-md', {});
+  assert.strictEqual(opencode.filename, 'spec.md');
+  assert.strictEqual(opencode.umbrella, true);
+
+  // a phase command is NOT flagged umbrella
+  const orient = render.renderCommand(
+    path.join(render.PKG_ROOT, 'templates', 'commands', 'orient.md'), 'claude-md', {});
+  assert.ok(!orient.umbrella);
+});
+
 test('all agents are known and parseAgentList validates', () => {
   assert.deepStrictEqual(agents.listAgents().sort(), ['claude-code', 'codex', 'gemini', 'github-copilot', 'opencode']);
   assert.deepStrictEqual(
