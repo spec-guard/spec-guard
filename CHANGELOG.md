@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.2...cli-v0.3.3) (2026-06-20)
+
+
+### Features
+
+* shell completion for bash, zsh, fish, and PowerShell ([597203e](https://github.com/spec-guard/spec-guard/commit/597203ecd16e9dff029496926009cd5c0961ac8f))
+
 ## [0.3.2](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.1...cli-v0.3.2) (2026-06-20)
 
 
