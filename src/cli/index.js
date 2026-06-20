@@ -18,6 +18,7 @@ const COMMANDS = {
   off: { summary: 'Disable spec-guard (persists across sessions).' },
   install: { summary: "Bootstrap a machine's global agent config (use: install --global)." },
   migrate: { summary: 'Transitional: upgrade an old-model repo (.claude IP, docs/superpowers) to the current layout. Dry-run unless --apply.' },
+  commit: { summary: 'Commit the loop result: validate Conventional Commit (no AI attribution), current repo or --all/--scope across the backup monorepo.' },
 };
 
 // Aliases that route to another command module with a fixed leading arg.
