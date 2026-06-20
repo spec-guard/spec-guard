@@ -6,8 +6,8 @@ Run step 6 (SYNC) of the spec-guard loop.
 
 1. Update the docs this change affects: architecture doc, ADR (new or status), API contract,
    event catalog, glossary. The repo's CLAUDE.md "when to update docs" rule is binding.
-2. Keep deliverable docs (`docs/`) separate from the internal IP knowledge base (`${ipDir}/`) and
-   per-agent dirs; never let a `docs/` file link into `${ipDir}/` or an agent dir.
+2. Keep deliverable docs (`docs/`) separate from the internal IP knowledge base (`${privateDir}/`) and
+   per-agent dirs; never let a `docs/` file link into `${privateDir}/` or an agent dir.
 3. In a multi-repo workspace, commit inside each affected deliverable repo in dependency order,
    then let the backup root capture the state.
 

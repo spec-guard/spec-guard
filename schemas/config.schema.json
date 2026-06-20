@@ -7,7 +7,7 @@
   "properties": {
     "specDir": { "type": "string", "description": "Deliverable specs directory (default docs/specs)." },
     "plansDir": { "type": "string", "description": "Deliverable plans directory (default docs/plans)." },
-    "ipDir": { "type": "string", "description": "Harness-agnostic IP knowledge base directory, not shipped (default .private)." },
+    "privateDir": { "type": "string", "description": "Harness-agnostic IP knowledge base directory, not shipped (default .private)." },
     "agents": {
       "type": "array",
       "items": { "enum": ["claude-code", "codex", "github-copilot", "gemini"] },

@@ -16,21 +16,21 @@ agent and is invisible to the others' mental model.
 Recognize **three** categories, not two:
 
 1. **Deliverable** → `docs/` (shipped, harness-agnostic).
-2. **IP knowledge base** → a **configurable, harness-agnostic** `ipDir` (default **`.private/`**),
+2. **IP knowledge base** → a **configurable, harness-agnostic** `privateDir` (default **`.private/`**),
    not shipped. Holds troubleshooting, action plans, audits, internal rationale, internal
    standards, agent templates, and credentials.
 3. **Per-agent integration** → each agent's own dir (`.claude/`, `.codex/`, `.github/`, `.gemini/`),
    generated and gitignored in deliverables.
 
 The golden rule generalizes: **internal MAY reference `docs/`; `docs/` MUST NOT reference internal**,
-where "internal" = `ipDir` **and** any agent dir. The wall lint forbids `docs/` hyperlinks into
-`ipDir` or an agent dir (at any `../` depth); prose mentions are not violations.
+where "internal" = `privateDir` **and** any agent dir. The wall lint forbids `docs/` hyperlinks into
+`privateDir` or an agent dir (at any `../` depth); prose mentions are not violations.
 
 ## Consequences
 
-- `ipDir` is a config key (default `.private`), resolved alongside `specDir`/`plansDir` and
-  substituted into templates (`${ipDir}`).
-- `init --scaffold` creates `${ipDir}/` (docs buckets + credentials), not `.claude/docs/`.
+- `privateDir` is a config key (default `.private`), resolved alongside `specDir`/`plansDir` and
+  substituted into templates (`${privateDir}`).
+- `init --scaffold` creates `${privateDir}/` (docs buckets + credentials), not `.claude/docs/`.
 - `doctor`'s wall lint and the `sync-check` hook are agnostic to the agent in use.
 - Migrating an existing repo means moving its IP knowledge base out of `.claude/docs` +
-  `.claude/credentials` into `${ipDir}/`, while keeping `.claude/` for Claude Code integration only.
+  `.claude/credentials` into `${privateDir}/`, while keeping `.claude/` for Claude Code integration only.

@@ -2,7 +2,7 @@
 
 // IP/deliverable wall lint. The golden rule: deliverable docs (`docs/`) must never link into
 // NON-deliverable content. Non-deliverable = the internal IP knowledge base (the configurable
-// `ipDir`, default `.private/`) and per-agent integration dirs (`.claude/`, `.codex/`,
+// `privateDir`, default `.private/`) and per-agent integration dirs (`.claude/`, `.codex/`,
 // `.gemini/`). A violation is a *hyperlink* whose target points into one of those at any `../`
 // depth (e.g. `](.private/x)`, `](../.private/x)`, `](.claude/x)`). A *prose* mention of those
 // paths (e.g. while explaining this rule) is NOT a violation.
@@ -55,13 +55,13 @@ function lintDocsDir(docsDir, forbidden) {
   return violations;
 }
 
-// Lint a repo's deliverable docs tree. `opts.ipDir` (default `.private`) + the agent dirs are
+// Lint a repo's deliverable docs tree. `opts.privateDir` (default `.private`) + the agent dirs are
 // forbidden link targets.
 function lintRepo(repoRoot, opts) {
   const options = opts || {};
-  const ipDir = options.ipDir || '.private';
+  const privateDir = options.privateDir || '.private';
   const docsRel = options.docsRel || 'docs';
-  const forbidden = [ipDir].concat(DEFAULT_AGENT_DIRS);
+  const forbidden = [privateDir].concat(DEFAULT_AGENT_DIRS);
   return lintDocsDir(path.join(repoRoot, docsRel), forbidden);
 }
 

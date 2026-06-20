@@ -18,7 +18,7 @@ function renderVars(settings) {
   return {
     specDir: (settings && settings.specDir) || 'docs/specs',
     plansDir: (settings && settings.plansDir) || 'docs/plans',
-    ipDir: (settings && settings.ipDir) || '.private',
+    privateDir: (settings && settings.privateDir) || '.private',
     version: pkg.version,
   };
 }
@@ -173,12 +173,12 @@ function scaffoldProject(repoRoot, vars) {
     'docs/standards',
     'docs/product',
     'docs/templates',
-    `${vars.ipDir}/docs/troubleshootings`,
-    `${vars.ipDir}/docs/action_plans`,
-    `${vars.ipDir}/docs/audits`,
-    `${vars.ipDir}/docs/reviews`,
-    `${vars.ipDir}/docs/standards`,
-    `${vars.ipDir}/credentials`,
+    `${vars.privateDir}/docs/troubleshootings`,
+    `${vars.privateDir}/docs/action_plans`,
+    `${vars.privateDir}/docs/audits`,
+    `${vars.privateDir}/docs/reviews`,
+    `${vars.privateDir}/docs/standards`,
+    `${vars.privateDir}/credentials`,
   ];
   for (const d of dirs) fs.mkdirSync(path.join(repoRoot, d), { recursive: true });
 
@@ -203,8 +203,8 @@ function scaffoldProject(repoRoot, vars) {
   writeIfAbsent('docs/templates/adr-template.md', sub('templates/adr-template.md'));
   writeIfAbsent('CLAUDE.md', sub('CLAUDE.md'));
   writeIfAbsent(
-    path.join(vars.ipDir, 'README.md'),
-    `# Internal (not shipped)\n\nThe team's intellectual property — harness-agnostic, read by humans and any AI agent:\ntroubleshooting, action plans, audits, internal rationale, internal standards, and credentials.\nAdd \`${vars.ipDir}/\` to every deliverable repo's .gitignore. Deliverable docs (\`docs/\`) must\nnever link in here.\n`
+    path.join(vars.privateDir, 'README.md'),
+    `# Internal (not shipped)\n\nThe team's intellectual property — harness-agnostic, read by humans and any AI agent:\ntroubleshooting, action plans, audits, internal rationale, internal standards, and credentials.\nAdd \`${vars.privateDir}/\` to every deliverable repo's .gitignore. Deliverable docs (\`docs/\`) must\nnever link in here.\n`
   );
 
   return created;
