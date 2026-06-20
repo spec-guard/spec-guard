@@ -16,6 +16,9 @@ Where GitHub **Spec Kit** and **OpenSpec** give you the *mechanics* of spec-driv
 (scaffolding, slash commands), spec-guard adds the *governance* they lack — and brings the
 mechanics along too.
 
+> **Naming:** the npm package is **`@spec-guard/cli`**, the command you run is **`specguard`**
+> (one word, no hyphen), and the project/brand is **spec-guard**.
+
 ## What it gives you
 
 - **The loop, enforced.** `ORIENT → SPEC → PLAN → BUILD → VERIFY → SYNC`, injected into every
@@ -35,6 +38,19 @@ mechanics along too.
   your edits, and `uninstall` removes exactly what it added (and nothing of yours).
 - **Optional graphify enhancer.** When a `graphify-out/` knowledge graph exists, ORIENT/VERIFY use
   it; otherwise it falls back to grep/read. Never required.
+
+## Do I need the advanced parts?
+
+**Most users have one repo: just `specguard init .` and use the loop — you're done.** The
+governance (read-docs-first, spec-before-edits, verify-against-spec) works out of the box.
+
+The heavier features are **opt-in** and aimed at teams shipping deliverable repos to a client:
+
+- the **IP/deliverable wall** (`.private/`) matters when you keep internal notes you must *not* ship;
+- the **backup-monorepo / multi-git** intelligence (`--scope all`, `commit --all`) matters when one
+  workspace holds N separate git repos delivered separately.
+
+If neither applies to you, you can ignore `.private/`, `--scope`, and `--all` entirely.
 
 ## Requirements
 
@@ -56,6 +72,30 @@ specguard init . --agent claude-code,codex --with-global --scaffold   # non-inte
 specguard init . --agent all --no-global                              # every agent, don't touch machine config
 specguard setup                                                       # (re)wire just the machine hooks + statusline
 ```
+
+## Quickstart
+
+1. **Install + initialize** (above): `specguard init .`. On a TTY it asks which agents to set up and
+   offers to wire this machine's hooks right there — so that's usually all you run. (In CI, add
+   `--with-global`, or run `specguard setup` separately.)
+2. **Open your agent and just work.** spec-guard is active every session — no command needed. In
+   Claude Code you'll see a `[SPEC-GUARD]` badge, and the loop is injected automatically, so the
+   agent reads your governing docs/ADRs *before* writing code and verifies against the spec after.
+3. **Drive the phases explicitly when you want** (Claude Code / Gemini slash commands; other agents
+   use natural language — "orient on X", "write the spec", "commit this"):
+
+   | Command | When |
+   |---------|------|
+   | `/spec` | Show the loop and where the current task stands |
+   | `/spec:orient` | Load the docs/ADRs governing the surface you're about to touch |
+   | `/spec:write` | Locate or write the spec (scope, acceptance, traceability) |
+   | `/spec:verify` | Check the result against the spec + run the test/lint gate |
+   | `/spec:sync` | Update the docs/contracts the change affects |
+   | `/spec:commit` | Refresh the knowledge graph (if present), then commit (Conventional, no AI attribution) |
+
+4. **Turn it off / on** anytime: `specguard off` / `specguard on` (persists across sessions).
+5. **Something not working?** `specguard doctor` checks install health, repo topology, and the
+   IP/deliverable wall, and tells you what to fix.
 
 ## The loop
 
@@ -91,7 +131,7 @@ map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:s
 | `setup` | Wire this machine's Claude Code / Codex session hooks + statusline |
 | `uninstall [path] [--global] [--purge] [--dry-run]` | Remove spec-guard from a repo, or from this machine |
 | `doctor [path]` | Diagnose install health, repo topology, and the IP/deliverable wall |
-| `commit [--all] [--scope …] -m …` | Conventional Commit, single repo or across the backup monorepo |
+| `commit [--all] [--scope …] [--graphify] -m …` | Commit a message **you** author (validated as Conventional, AI attribution stripped), single repo or across the backup monorepo; `--graphify` refreshes the knowledge graph first |
 | `migrate [--apply]` | Transitional: upgrade an old-model repo to the current layout |
 | `self check\|upgrade\|rollback` | Update the CLI itself |
 | `status` · `toggle on\|off` (aliases `on`/`off`) | Show state · governance switch |
@@ -106,6 +146,9 @@ map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:s
 | `--spec-dir` / `--plans-dir` | `init` | Override the spec/plan locations (default `docs/specs`, `docs/plans`) |
 | `--private-dir` | `init`, `migrate` | Override the IP knowledge-base location (default `.private`) |
 | `--scope all` | `init` | Treat the tree as a backup monorepo (record module list for ripple/commit order) |
+| `--scope <a,b>` | `commit` | Commit only the named modules (otherwise `--all` = every impacted one) |
+| `--graphify` | `commit` | Refresh the `graphify-out/` knowledge graph (structural) **before** committing |
+| `--add` | `commit` | Stage all changes first (`git add -A`), then commit |
 | `--global` | `uninstall` | Operate on the machine, not a repo |
 | `--purge` | `uninstall --global` | Also forget preferences (XDG config + the on/off flag) |
 | `--dry-run` | `uninstall` | Print the plan and change nothing |
@@ -169,6 +212,9 @@ Co-tenant hooks (e.g. other tools wired into the same `settings.json`) are match
   "agents": ["claude-code", "codex"]
 }
 ```
+
+You normally don't edit this by hand — `init` writes it from your flags. If you do change a value,
+re-run `specguard update` to re-render the owned files against it.
 
 ## Migrating an existing repo
 
