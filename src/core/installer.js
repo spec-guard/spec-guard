@@ -154,11 +154,15 @@ function installGeminiExtension(agent, ctx, vars, m, keyspace, force) {
   let hooksCfg = {};
   const hooksJsonPath = agents.resolveHooksConfigPath(agent, ctx);
   try { hooksCfg = JSON.parse(fs.readFileSync(hooksJsonPath, 'utf8')); } catch (e) {}
-  jsonmerge.upsertHookCommand(hooksCfg, 'SessionStart', { command: `node "${activate}"` });
-  jsonmerge.upsertHookCommand(hooksCfg, 'Stop', { command: `bash "${syncCheck}"` });
-  fs.mkdirSync(path.dirname(hooksJsonPath), { recursive: true });
-  fs.writeFileSync(hooksJsonPath, JSON.stringify(hooksCfg, null, 2) + '\n');
-  actions.push({ action: 'wired', absPath: hooksJsonPath });
+  const ss = jsonmerge.upsertHookCommand(hooksCfg, 'SessionStart', { command: `node "${activate}"` });
+  const st = jsonmerge.upsertHookCommand(ss.config, 'Stop', { command: `bash "${syncCheck}"` });
+  // Only rewrite hooks.json when something actually changed (or --force), so an unchanged re-run is
+  // a true no-op — otherwise the literal 'wired' verb would mask idempotency for gemini repos.
+  if (ss.action !== 'noop' || st.action !== 'noop' || force) {
+    fs.mkdirSync(path.dirname(hooksJsonPath), { recursive: true });
+    fs.writeFileSync(hooksJsonPath, JSON.stringify(st.config, null, 2) + '\n');
+  }
+  actions.push({ action: ss.action, absPath: hooksJsonPath }, { action: st.action, absPath: hooksJsonPath });
 
   return actions;
 }

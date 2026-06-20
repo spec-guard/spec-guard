@@ -75,6 +75,23 @@ function capture(fn) {
   try { return { code: fn(), out }; } finally { process.stdout.write = o; process.stderr.write = e; }
 }
 
+test('attribution note fires only when attribution was actually present', () => {
+  const { d } = gitRepo();
+  // Clean message with extra blank lines (no attribution): note must NOT appear, even though
+  // cleanMessage collapses the blank lines.
+  fs.writeFileSync(path.join(d, 'a.txt'), 'x\n');
+  const clean = capture(() => commit.run([d, '--add', '-m', 'feat: clean\n\n\nbody']));
+  assert.strictEqual(clean.code, 0);
+  assert.doesNotMatch(clean.out, /stripped AI-attribution/);
+
+  // Real attribution: note MUST appear.
+  fs.writeFileSync(path.join(d, 'b.txt'), 'y\n');
+  const dirty = capture(() => commit.run([d, '--add', '-m', 'feat: dirty\n\nCo-Authored-By: Claude <noreply@anthropic.com>']));
+  assert.strictEqual(dirty.code, 0);
+  assert.match(dirty.out, /stripped AI-attribution/);
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
 test('--graphify is fallback-safe when no graph is present (still commits)', () => {
   const { d, g } = gitRepo();
   fs.writeFileSync(path.join(d, 'a.txt'), 'x\n');

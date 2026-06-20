@@ -115,8 +115,9 @@ test('install --global is idempotent', () => {
   const { home, cleanup } = sandbox();
   try {
     sg(home, ['setup']);
+    // Idempotent re-run reports the no-op concisely instead of re-printing the full wiring report.
     const out = sg(home, ['setup']);
-    assert.match(out, /SessionStart noop/);
+    assert.match(out, /machine already set up \(nothing changed\)/);
   } finally {
     cleanup();
   }
@@ -336,6 +337,50 @@ test('update protects a user-edited owned file with a sidecar', () => {
     sg(home, ['update', repo]);
     assert.strictEqual(fs.readFileSync(skillFile, 'utf8'), 'I hand-edited this skill\n', 'original preserved');
     assert.ok(fs.existsSync(skillFile + '.spec-guard-update'), 'sidecar written');
+  } finally {
+    cleanup();
+  }
+});
+
+test('init is honest on re-run: re-rendered, not "installed into"', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    const first = sg(home, ['init', repo, '--agent', 'claude-code']);
+    assert.match(first, /installed into/, 'fresh install says installed into');
+
+    const second = sg(home, ['init', repo, '--agent', 'claude-code']);
+    assert.match(second, /re-rendered/, 're-run says re-rendered');
+    assert.match(second, /already initialized/);
+    assert.doesNotMatch(second, /installed into/, 're-run must not claim a fresh install');
+  } finally {
+    cleanup();
+  }
+});
+
+test('update with nothing to change says "already up to date"', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    // Include gemini: its hooks.json write must also be idempotent (a literal "wired" verb would
+    // mask a no-op re-run and wrongly print "update complete").
+    sg(home, ['init', repo, '--agent', 'claude-code,gemini']);
+    // init just wrote every owned file, so an immediate update changes nothing.
+    const out = sg(home, ['update', repo]);
+    assert.match(out, /already up to date — nothing to re-render/);
+    assert.doesNotMatch(out, /update complete/);
+  } finally {
+    cleanup();
+  }
+});
+
+test('setup is honest on re-run: "machine already set up (nothing changed)"', () => {
+  const { home, cleanup } = sandbox();
+  try {
+    const first = sg(home, ['setup']);
+    assert.match(first, /machine setup/, 'first run wires and reports');
+
+    const second = sg(home, ['setup']);
+    assert.match(second, /machine already set up \(nothing changed\)/);
+    assert.doesNotMatch(second, /you may delete them now/, 'loose-files note suppressed when nothing changed');
   } finally {
     cleanup();
   }

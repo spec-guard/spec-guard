@@ -12,22 +12,17 @@ function detectShell() {
   return completion.SHELLS.includes(sh) ? sh : null;
 }
 
+// Per-command `-h/--help` is handled centrally by the dispatcher (it renders the usage +
+// setup examples from the COMMANDS table), so this module only prints a short pointer on error.
 function usage(stream) {
   stream.write(
     'usage: specguard completion <bash|zsh|fish|powershell>\n' +
-      '  bash:        eval "$(specguard completion bash)"            # add to ~/.bashrc\n' +
-      '  zsh:         eval "$(specguard completion zsh)"             # add to ~/.zshrc\n' +
-      '  fish:        specguard completion fish > ~/.config/fish/completions/specguard.fish\n' +
-      '  powershell:  specguard completion powershell | Out-String | Invoke-Expression   # add to $PROFILE\n'
+      "  run 'specguard completion --help' for shell setup examples\n"
   );
 }
 
 function run(args) {
   const arg = (args[0] || '').toLowerCase();
-  if (arg === '-h' || arg === '--help') {
-    usage(process.stdout);
-    return 0;
-  }
   const shell = arg || detectShell();
   if (!shell || !completion.SHELLS.includes(shell)) {
     if (arg) process.stderr.write(`specguard completion: unknown shell '${arg}'.\n`);

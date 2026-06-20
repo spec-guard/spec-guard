@@ -52,6 +52,16 @@ function run(args) {
       }
     }
   }
+
+  // Honest idempotency: when every owned file was already current, say so plainly instead of
+  // printing a "complete" banner with an all-`unchanged` count (which reads like work happened).
+  const NOOP = new Set(['unchanged', 'block-unchanged', 'noop']);
+  const changed = Object.keys(counts).some((k) => !NOOP.has(k));
+  if (!changed) {
+    process.stdout.write(`specguard: already up to date — nothing to re-render (${validated.join(', ')})\n`);
+    return 0;
+  }
+
   process.stdout.write(`specguard: update complete (${validated.join(', ')})\n`);
   process.stdout.write('  ' + Object.entries(counts).map(([k, v]) => `${k}: ${v}`).join('  ') + '\n');
   if (diverged) process.stdout.write(`  ${diverged} user-edited file(s) protected — review the .spec-guard-update sidecars.\n`);

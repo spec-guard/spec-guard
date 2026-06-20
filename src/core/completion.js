@@ -20,9 +20,9 @@ const FLAGS = {
   setup: ['--force'],
   uninstall: ['--agent', '--global', '--purge', '--dry-run'],
   doctor: ['--quiet'],
-  commit: ['--all', '--scope', '--graphify', '--add', '--message', '--force'],
+  commit: ['--all', '--scope', '--graphify', '--add', '--message', '--message-file', '--force'],
   migrate: ['--apply', '--private-dir'],
-  self: ['--dry-run', '--tag'],
+  self: ['--dry-run', '--tag', '--force'],
 };
 
 // Sub-command / value words.

@@ -162,9 +162,11 @@ map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:s
 | `doctor [path]` | Diagnose install health, repo topology, and the IP/deliverable wall |
 | `commit [--all] [--scope …] [--graphify] -m …` | Commit a message **you** author (validated as Conventional, AI attribution stripped), single repo or across the backup monorepo; `--graphify` refreshes the knowledge graph first |
 | `migrate [--apply]` | Transitional: upgrade an old-model repo to the current layout |
-| `self check\|upgrade\|rollback` | Update the CLI itself |
+| `self check\|upgrade\|rollback [--dry-run] [--tag …] [--force]` | Update the CLI itself. `upgrade` is idempotent (skips when already on the latest; `--force` reinstalls); a real upgrade also refreshes this machine's hooks (only if already wired) and reminds you to `update` your repos |
 | `completion <bash\|zsh\|fish\|powershell>` | Print a shell-completion script (auto-detects the shell if omitted) |
 | `status` · `toggle on\|off` (aliases `on`/`off`) | Show state · governance switch |
+
+Run `specguard <command> --help` for per-command usage, subcommands, and flags.
 
 ### Common flags
 

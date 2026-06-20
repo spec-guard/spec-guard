@@ -123,7 +123,10 @@ function run(args) {
     process.stderr.write(`specguard commit: message is not a Conventional Commit (expected "feat|fix|chore|...: subject").\n  got: ${clean.split('\n')[0]}\n`);
     if (!flags.force) return 1;
   }
-  if (clean !== message.replace(/\s+$/, '')) {
+  // Only claim we stripped attribution when an attribution line was actually present — `cleanMessage`
+  // also collapses blank lines, so a plain whitespace diff would falsely accuse a clean message.
+  const strippedAttribution = message.split('\n').some((line) => ATTRIBUTION.some((re) => re.test(line)));
+  if (strippedAttribution) {
     process.stdout.write('note: stripped AI-attribution line(s) from the message (deliverable commits carry no AI attribution).\n');
   }
 
@@ -135,7 +138,9 @@ function run(args) {
     // Graph sync BEFORE the commit so the refreshed graph is part of it.
     if (flags.graphify) process.stdout.write(syncRootGraph(root) + '\n');
     const res = commitRepo(root, clean, { add: !!flags.add });
-    process.stdout.write(res === 'committed' ? `committed (${path.basename(root)})\n` : res === 'nothing' ? 'nothing staged to commit (use --add to stage all)\n' : 'commit failed\n');
+    if (res === 'committed') process.stdout.write(`specguard: committed (${path.basename(root)})\n`);
+    else if (res === 'nothing') process.stdout.write('specguard: nothing staged to commit (use --add to stage all)\n');
+    else process.stderr.write('specguard commit: commit failed\n');
     return res === 'error' ? 1 : 0;
   }
 
