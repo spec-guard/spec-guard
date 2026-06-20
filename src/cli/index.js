@@ -17,6 +17,7 @@ const COMMANDS = {
   on: { summary: 'Enable spec-guard (persists across sessions).' },
   off: { summary: 'Disable spec-guard (persists across sessions).' },
   install: { summary: "Bootstrap a machine's global agent config (use: install --global)." },
+  migrate: { summary: 'Transitional: upgrade an old-model repo (.claude IP, docs/superpowers) to the current layout. Dry-run unless --apply.' },
 };
 
 // Aliases that route to another command module with a fixed leading arg.
