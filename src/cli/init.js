@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 const readline = require('node:readline/promises');
 
@@ -43,10 +44,23 @@ function reportDiverged(summary) {
     }
   }
   if (!diverged.length) return;
-  process.stdout.write('\nUser-edited files were NOT overwritten:\n');
+  process.stdout.write('\nKept on disk (these differ from what spec-guard last wrote, so they were NOT overwritten):\n');
+  let anySidecar = false;
   for (const a of diverged) {
-    if (a.action === 'diverged') process.stdout.write(`  ${a.absPath}\n    -> new version written to ${a.sidecar}\n`);
-    else process.stdout.write(`  ${a.absPath} (managed block had local edits; block refreshed in place)\n`);
+    if (a.action === 'diverged') {
+      process.stdout.write(`  ${a.absPath}\n    new version saved beside it: ${a.sidecar}\n`);
+      anySidecar = true;
+    } else {
+      process.stdout.write(`  ${a.absPath}  (managed block had local edits; the block was refreshed in place)\n`);
+    }
+  }
+  if (anySidecar) {
+    process.stdout.write(
+      '\n  These are spec-guard-owned files — a difference is usually an older install or a stray edit,\n' +
+        '  not something you authored. To take the new version, replace each file with its\n' +
+        '  `.spec-guard-update` sidecar, or just re-render cleanly with `specguard update --force`\n' +
+        '  (then delete any leftover `.spec-guard-update` files).\n'
+    );
   }
 }
 
@@ -56,7 +70,11 @@ async function maybeWireMachine(flags, home, agentList) {
   const needGlobal = agentList.some((id) => id === 'claude-code' || id === 'codex');
   if (!needGlobal) return;
   const globalM = manifest.load(globalManifestPath(home));
-  if (Object.keys(globalM.files || {}).length > 0) return; // already wired
+  if (Object.keys(globalM.files || {}).length > 0) {
+    // Already wired on this machine — say so instead of skipping silently.
+    process.stdout.write("  machine hooks already wired (run 'specguard setup' to refresh them).\n");
+    return;
+  }
 
   let doIt;
   if (flags['with-global']) doIt = true;
@@ -82,6 +100,7 @@ async function run(args) {
   const { flags, positionals } = parseArgs(args);
   const repoRoot = path.resolve(positionals[0] || '.');
   const home = homeDir(flags);
+  const alreadyInit = fs.existsSync(path.join(repoRoot, '.spec-guard', 'config.json'));
 
   let agentList;
   try {
@@ -131,6 +150,9 @@ async function run(args) {
   process.stdout.write(`specguard: installed into ${repoRoot}\n`);
   process.stdout.write(`  spec dir: ${specDir}   plans dir: ${plansDir}\n`);
   process.stdout.write(`  agents: ${agentList.join(', ') || '(none)'}${skipRules ? '  (self-dogfood: rules-block skipped)' : ''}\n`);
+  if (alreadyInit) {
+    process.stdout.write("  (already initialized — `specguard update` is the lighter re-render for upgrades)\n");
+  }
 
   await maybeWireMachine(flags, home, agentList);
 

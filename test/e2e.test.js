@@ -209,6 +209,19 @@ test('init (non-interactive, no flag) does NOT wire the machine silently', () =>
   }
 });
 
+test('re-init after setup reports already-wired + already-initialized (no silent skips)', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code']);
+    sg(home, ['setup']);
+    const out = sg(home, ['init', repo, '--agent', 'claude-code']);
+    assert.match(out, /machine hooks already wired/);
+    assert.match(out, /already initialized/);
+  } finally {
+    cleanup();
+  }
+});
+
 test('doctor --quiet (machine-check) fails before install, passes after', () => {
   const { home, cleanup } = sandbox();
   try {
