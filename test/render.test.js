@@ -35,8 +35,8 @@ test('renderCommand emits the right filename + format per agent', () => {
   assert.match(gemini.content, /"""\n$/);
 });
 
-test('all four agents are known and parseAgentList validates', () => {
-  assert.deepStrictEqual(agents.listAgents().sort(), ['claude-code', 'codex', 'gemini', 'github-copilot']);
+test('all agents are known and parseAgentList validates', () => {
+  assert.deepStrictEqual(agents.listAgents().sort(), ['claude-code', 'codex', 'gemini', 'github-copilot', 'opencode']);
   assert.deepStrictEqual(
     agents.parseAgentList('claude-code, codex,gemini').sort(),
     ['claude-code', 'codex', 'gemini']

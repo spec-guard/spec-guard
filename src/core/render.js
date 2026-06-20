@@ -89,6 +89,12 @@ function renderCommand(templatePath, format, vars) {
         filename: `spec-${id}.prompt.md`,
         content: `---\ndescription: ${description}\n---\n\n${trimmedBody}`,
       };
+    case 'opencode-md':
+      // opencode custom command: a markdown file; filename (sans .md) is the command id.
+      return {
+        filename: `spec-${id}.md`,
+        content: `---\ndescription: ${description}\n---\n\n${trimmedBody}`,
+      };
     case 'gemini-toml':
       return {
         filename: `${id}.toml`,

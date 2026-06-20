@@ -39,6 +39,16 @@ const AGENTS = {
     rulesFile: '.github/copilot-instructions.md',
     hooks: { kind: 'copilot', scope: 'home', configPath: null, events: [] },
   },
+  opencode: {
+    // opencode.ai (terminal agent). Also covers OpenWork, which is powered by opencode and
+    // shares its conventions (AGENTS.md + .opencode/). Always-on governance rides AGENTS.md
+    // (opencode's project-memory file); no separate lifecycle hook in v1.
+    id: 'opencode',
+    skill: { scope: 'repo', dir: '.opencode/skill/spec-guard' },
+    commands: { dir: '.opencode/command', format: 'opencode-md' },
+    rulesFile: 'AGENTS.md',
+    hooks: { kind: 'none', scope: 'home', configPath: null, events: [] },
+  },
   gemini: {
     id: 'gemini',
     extension: true,

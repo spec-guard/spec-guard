@@ -24,6 +24,13 @@ Per-agent targets:
 | codex | `~/.codex/skills/spec-guard/` | skills+hooks (v0.1.0) | `~/.codex/hooks.json` | `AGENTS.md` |
 | github-copilot | `.github/skills/spec-guard/` | `.github/prompts/spec-*.prompt.md` | Copilot JSON hooks | `.github/copilot-instructions.md` |
 | gemini | `.gemini/extensions/spec-guard/skills/…` | `…/commands/spec/*.toml` | extension `hooks/hooks.json` | `GEMINI.md` |
+| opencode | `.opencode/skill/spec-guard/` | `.opencode/command/spec-*.md` | — (AGENTS.md project memory) | `AGENTS.md` |
+
+**OpenWork** (different-ai/openwork) is a desktop control surface **powered by opencode** and
+shares its conventions (`AGENTS.md` + `.opencode/`) — so the `opencode` row covers it; no separate
+row needed. **open-design** (nexu-io/open-design) is a *design-asset generation* tool, not a code
+agent with a spec-driven loop, so it is intentionally **not** a target — spec-guard's governance
+does not apply to it.
 
 ## Consequences
 
