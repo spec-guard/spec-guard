@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.3...cli-v0.3.4) (2026-06-20)
+
+
+### Features
+
+* idempotent self-update and consistent, discoverable command UX ([72a9a79](https://github.com/spec-guard/spec-guard/commit/72a9a79d5da60b85d97d9b336bb9408b8bb37897))
+
 ## [0.3.3](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.2...cli-v0.3.3) (2026-06-20)
 
 
