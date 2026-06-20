@@ -31,9 +31,12 @@ function npmInstallGlobal(tag) {
   return r;
 }
 
-function machineCheck() {
-  // Lightweight post-upgrade smoke (no project tree): the binary loaded + version is a string.
-  return typeof pkg.version === 'string' && pkg.version.length > 0;
+// Post-upgrade smoke: invoke the freshly-installed global binary out-of-process and read its
+// reported version. (The in-process `pkg.version` is the OLD code still resident in memory, so it
+// can't validate the upgrade.) Returns the version string, or null if the binary can't be run.
+function installedVersion() {
+  const r = spawnSync('specguard', ['--version'], { encoding: 'utf8' });
+  return r.status === 0 && r.stdout ? r.stdout.trim() : null;
 }
 
 function check() {
@@ -60,6 +63,7 @@ function upgrade(flags) {
     return 0;
   }
 
+  const target = npmView(`${PKG_NAME}@${tag}`); // may be null when offline
   writeLKG(pkg.version);
   const r = npmInstallGlobal(tag);
   if (r.status !== 0) {
@@ -73,11 +77,14 @@ function upgrade(flags) {
     return 1;
   }
 
-  if (!machineCheck()) {
-    process.stderr.write('Post-upgrade check failed — rolling back.\n');
+  // Only roll back on a CONFIRMED bad upgrade (installed version differs from the target). If we
+  // can't run the binary to confirm (e.g. PATH oddities) we trust npm's success and don't churn.
+  const installed = installedVersion();
+  if (installed && target && installed !== target) {
+    process.stderr.write(`Post-upgrade check failed: expected ${target}, got ${installed} — rolling back.\n`);
     return rollback(flags);
   }
-  process.stdout.write(`upgraded to ${tag}\n`);
+  process.stdout.write(`upgraded to ${installed || target || tag}\n`);
   return 0;
 }
 
@@ -102,7 +109,7 @@ function run(args) {
   if (sub === 'check') return check(flags);
   if (sub === 'upgrade') return upgrade(flags);
   if (sub === 'rollback') return rollback(flags);
-  process.stderr.write('usage: spec-guard self check|upgrade|rollback [--dry-run] [--tag vX.Y.Z]\n');
+  process.stderr.write('usage: specguard self check|upgrade|rollback [--dry-run] [--tag vX.Y.Z]\n');
   return 1;
 }
 

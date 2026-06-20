@@ -5,7 +5,7 @@
 //
 // Scopes:
 //   - 'repo'  -> path is under the target repo root (per-repo install via `init`)
-//   - 'home'  -> path is under the user's home agent dir (machine install via `install --global`)
+//   - 'home'  -> path is under the user's home agent dir (machine install via `setup`)
 //
 // Hook config kinds:
 //   - 'claude-settings'  -> ~/.claude/settings.json  (SessionStart + Stop + statusLine)
@@ -74,8 +74,12 @@ function get(id) {
 }
 
 // Parse a comma-separated --agent value into a validated, de-duplicated list.
+// Sugar (matching OpenSpec's `--tools`): `all` -> every known agent, `none` -> [].
 function parseAgentList(value) {
-  const ids = String(value || '')
+  const raw = String(value || '').trim().toLowerCase();
+  if (raw === 'all') return listAgents();
+  if (raw === 'none') return [];
+  const ids = raw
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);

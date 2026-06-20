@@ -1,7 +1,7 @@
 'use strict';
 
-const fs = require('fs');
 const path = require('path');
+const readline = require('node:readline/promises');
 
 const { parseArgs, homeDir, globalManifestPath, isSpecGuardRepo } = require('./_shared');
 const config = require('../core/config');
@@ -9,6 +9,31 @@ const agents = require('../core/agents');
 const manifest = require('../core/manifest');
 const installer = require('../core/installer');
 const topology = require('../core/topology');
+const setup = require('./setup');
+
+// Ask a single question on a TTY; return `def` unchanged when non-interactive (CI/piped).
+async function ask(query, def) {
+  if (!process.stdin.isTTY) return def;
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = (await rl.question(query)).trim();
+    return answer || def;
+  } finally {
+    rl.close();
+  }
+}
+
+// Resolve the agent list: explicit --agent wins; otherwise prompt on a TTY; else default.
+async function resolveAgents(flags) {
+  if (flags.agent) return agents.parseAgentList(flags.agent);
+  if (!process.stdin.isTTY) return ['claude-code'];
+  const known = agents.listAgents().join(', ');
+  const answer = await ask(
+    `Which agents to set up? [claude-code]\n  (comma-separated from: ${known}; or "all"): `,
+    'claude-code'
+  );
+  return agents.parseAgentList(answer);
+}
 
 function reportDiverged(summary) {
   const diverged = [];
@@ -25,14 +50,42 @@ function reportDiverged(summary) {
   }
 }
 
-function run(args) {
+// First-run convenience: wire this machine's session hooks (the `setup` step) without a second
+// command. Honors --with-global / --no-global; otherwise offers it interactively on a TTY.
+async function maybeWireMachine(flags, home, agentList) {
+  const needGlobal = agentList.some((id) => id === 'claude-code' || id === 'codex');
+  if (!needGlobal) return;
+  const globalM = manifest.load(globalManifestPath(home));
+  if (Object.keys(globalM.files || {}).length > 0) return; // already wired
+
+  let doIt;
+  if (flags['with-global']) doIt = true;
+  else if (flags['no-global']) doIt = false;
+  else if (process.stdin.isTTY) {
+    doIt = (await ask("Wire this machine's session hooks now (SessionStart/Stop + statusline)? [Y/n]: ", 'y'))
+      .toLowerCase()
+      .startsWith('y');
+  } else {
+    doIt = false; // non-interactive (CI/piped): never mutate machine config silently
+  }
+
+  if (!doIt) {
+    process.stdout.write("\nNote: run 'specguard setup' to wire the session hooks (SessionStart/Stop) for Claude Code / Codex.\n");
+    return;
+  }
+  const { wired, missing } = setup.wireMachine(home, { force: !!flags.force });
+  process.stdout.write('\nmachine setup:\n' + wired.join('\n') + '\n');
+  if (missing.length) process.stderr.write('WARNING: hook files missing after setup:\n  ' + missing.join('\n  ') + '\n');
+}
+
+async function run(args) {
   const { flags, positionals } = parseArgs(args);
   const repoRoot = path.resolve(positionals[0] || '.');
   const home = homeDir(flags);
 
   let agentList;
   try {
-    agentList = flags.agent ? agents.parseAgentList(flags.agent) : ['claude-code'];
+    agentList = await resolveAgents(flags);
   } catch (e) {
     process.stderr.write(e.message + '\n');
     return 1;
@@ -40,9 +93,10 @@ function run(args) {
 
   const specDir = (typeof flags['spec-dir'] === 'string' && flags['spec-dir']) || 'docs/specs';
   const plansDir = (typeof flags['plans-dir'] === 'string' && flags['plans-dir']) || 'docs/plans';
+  const privateDir = (typeof flags['private-dir'] === 'string' && flags['private-dir']) || '.private';
   const force = !!flags.force;
 
-  const settings = { specDir, plansDir, agents: agentList };
+  const settings = { specDir, plansDir, privateDir, agents: agentList };
 
   // Topology: record backup-monorepo + module list so the rules/ripple logic is repo-aware.
   const t = topology.detect(repoRoot, { reinit: true });
@@ -74,18 +128,11 @@ function run(args) {
 
   manifest.save(repoManifestPath, m);
 
-  process.stdout.write(`spec-guard: installed into ${repoRoot}\n`);
+  process.stdout.write(`specguard: installed into ${repoRoot}\n`);
   process.stdout.write(`  spec dir: ${specDir}   plans dir: ${plansDir}\n`);
-  process.stdout.write(`  agents: ${agentList.join(', ')}${skipRules ? '  (self-dogfood: rules-block skipped)' : ''}\n`);
+  process.stdout.write(`  agents: ${agentList.join(', ') || '(none)'}${skipRules ? '  (self-dogfood: rules-block skipped)' : ''}\n`);
 
-  const needGlobal = agentList.some((id) => id === 'claude-code' || id === 'codex');
-  const globalM = manifest.load(globalManifestPath(home));
-  const hasGlobal = Object.keys(globalM.files || {}).length > 0;
-  if (needGlobal && !hasGlobal) {
-    process.stdout.write(
-      "\nNote: run 'spec-guard install --global' to wire the session hooks (SessionStart/Stop) for Claude Code / Codex.\n"
-    );
-  }
+  await maybeWireMachine(flags, home, agentList);
 
   reportDiverged(summary);
   return 0;

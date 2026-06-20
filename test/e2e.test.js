@@ -7,13 +7,15 @@ const os = require('node:os');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
 
-const BIN = path.join(__dirname, '..', 'bin', 'spec-guard.js');
+const BIN = path.join(__dirname, '..', 'bin', 'specguard.js');
 const jm = require('../src/core/jsonmerge');
 
 function sgStatus(home, args) {
   const r = spawnSync('node', [BIN, ...args], {
     encoding: 'utf8',
-    env: Object.assign({}, process.env, { SPEC_GUARD_HOME: home }),
+    // Neutralize XDG_CONFIG_HOME / APPDATA so the global config+manifest resolve under the
+    // sandbox home regardless of the host environment (hermetic on any CI machine).
+    env: Object.assign({}, process.env, { SPEC_GUARD_HOME: home, XDG_CONFIG_HOME: '', APPDATA: '' }),
   });
   return { stdout: r.stdout, stderr: r.stderr, status: r.status };
 }
@@ -27,7 +29,9 @@ function sandbox() {
 function sg(home, args) {
   return execFileSync('node', [BIN, ...args], {
     encoding: 'utf8',
-    env: Object.assign({}, process.env, { SPEC_GUARD_HOME: home }),
+    // Neutralize XDG_CONFIG_HOME / APPDATA so the global config+manifest resolve under the
+    // sandbox home regardless of the host environment (hermetic on any CI machine).
+    env: Object.assign({}, process.env, { SPEC_GUARD_HOME: home, XDG_CONFIG_HOME: '', APPDATA: '' }),
   });
 }
 
@@ -64,7 +68,7 @@ test('init installs all four agents and global wiring is single-entry', () => {
     assert.doesNotMatch(skill, /\$\{specDir\}/);
     assert.doesNotMatch(skill, /superpowers/);
 
-    sg(home, ['install', '--global']);
+    sg(home, ['setup']);
     const settings = JSON.parse(fs.readFileSync(path.join(home, '.claude/settings.json'), 'utf8'));
     assert.strictEqual(jm.countOwned(settings, 'SessionStart'), 1);
     assert.strictEqual(jm.countOwned(settings, 'Stop'), 1);
@@ -96,7 +100,7 @@ test('install --global preserves co-tenant hooks and collapses a legacy entry (n
       }, null, 2)
     );
 
-    sg(home, ['install', '--global']);
+    sg(home, ['setup']);
     const s = JSON.parse(fs.readFileSync(path.join(home, '.claude/settings.json'), 'utf8'));
     const cmds = s.hooks.SessionStart.flatMap((g) => g.hooks.map((h) => h.command));
     assert.ok(cmds.some((c) => c.includes('caveman')), 'caveman preserved');
@@ -110,8 +114,8 @@ test('install --global preserves co-tenant hooks and collapses a legacy entry (n
 test('install --global is idempotent', () => {
   const { home, cleanup } = sandbox();
   try {
-    sg(home, ['install', '--global']);
-    const out = sg(home, ['install', '--global']);
+    sg(home, ['setup']);
+    const out = sg(home, ['setup']);
     assert.match(out, /SessionStart noop/);
   } finally {
     cleanup();
@@ -142,6 +146,75 @@ test('doctor exits 2 when a docs/ file hyperlinks into .claude/', () => {
     const d = sgStatus(home, ['doctor', repo]);
     assert.strictEqual(d.status, 2, 'wall violation -> exit 2');
     assert.match(d.stdout, /wall: 1 violation/);
+  } finally {
+    cleanup();
+  }
+});
+
+test('init --private-dir is honored in config, scaffold tree, and the wall lint', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code', '--scaffold', '--private-dir', '.ip']);
+    const cfg = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.strictEqual(cfg.privateDir, '.ip', 'privateDir persisted to config');
+    assert.ok(fs.existsSync(path.join(repo, '.ip/credentials')), 'scaffold uses custom privateDir');
+    assert.ok(!fs.existsSync(path.join(repo, '.private')), 'default .private not created');
+
+    // The wall lint should now flag docs/ links into the CUSTOM private dir.
+    fs.mkdirSync(path.join(repo, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(repo, 'docs/bad.md'), 'See [x](../.ip/docs/x.md).\n');
+    const d = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d.status, 2, 'wall violation against custom privateDir -> exit 2');
+  } finally {
+    cleanup();
+  }
+});
+
+test('init --agent all installs every known agent', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'all']);
+    for (const f of [
+      '.claude/skills/spec-guard/SKILL.md',
+      '.github/skills/spec-guard/SKILL.md',
+      '.opencode/skill/spec-guard/SKILL.md',
+      '.gemini/extensions/spec-guard/skills/spec-guard/SKILL.md',
+    ]) assert.ok(fs.existsSync(path.join(repo, f)), `missing ${f}`);
+    const cfg = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.ok(cfg.agents.includes('opencode') && cfg.agents.includes('gemini'), 'all agents recorded');
+  } finally {
+    cleanup();
+  }
+});
+
+test('init --with-global wires the machine in one shot (no separate setup)', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code', '--with-global']);
+    const settings = JSON.parse(fs.readFileSync(path.join(home, '.claude/settings.json'), 'utf8'));
+    assert.strictEqual(jm.countOwned(settings, 'SessionStart'), 1, 'SessionStart wired by init --with-global');
+    assert.strictEqual(jm.countOwned(settings, 'Stop'), 1, 'Stop wired by init --with-global');
+  } finally {
+    cleanup();
+  }
+});
+
+test('init (non-interactive, no flag) does NOT wire the machine silently', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code']);
+    assert.ok(!fs.existsSync(path.join(home, '.claude/settings.json')), 'no machine mutation without --with-global on a non-TTY');
+  } finally {
+    cleanup();
+  }
+});
+
+test('doctor --quiet (machine-check) fails before install, passes after', () => {
+  const { home, cleanup } = sandbox();
+  try {
+    assert.strictEqual(sgStatus(home, ['doctor', '--quiet']).status, 1, 'no global install -> non-zero');
+    sg(home, ['setup']);
+    assert.strictEqual(sgStatus(home, ['doctor', '--quiet']).status, 0, 'after install -> zero');
   } finally {
     cleanup();
   }
@@ -222,7 +295,7 @@ test('uninstall --global unwires hooks and preserves co-tenant entries', () => {
     fs.writeFileSync(path.join(home, '.claude/settings.json'),
       JSON.stringify({ hooks: { SessionStart: [{ hooks: [{ type: 'command', command: 'node "/x/caveman.js"' }] }] } }, null, 2));
 
-    sg(home, ['install', '--global']);
+    sg(home, ['setup']);
     let s = JSON.parse(fs.readFileSync(path.join(home, '.claude/settings.json'), 'utf8'));
     assert.strictEqual(jm.countOwned(s, 'SessionStart'), 1, 'installed');
 

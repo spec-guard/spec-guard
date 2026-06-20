@@ -32,7 +32,7 @@ test('--version prints the package version', async () => {
 
 test('--help lists the commands', async () => {
   const { out, code } = await captureStdout(() => cli.main(['--help']));
-  assert.match(out, /Usage: spec-guard/);
+  assert.match(out, /Usage: specguard/);
   for (const name of Object.keys(cli.COMMANDS)) {
     assert.match(out, new RegExp(`\\b${name}\\b`));
   }

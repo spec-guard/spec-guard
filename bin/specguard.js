@@ -6,6 +6,6 @@ require('../src/cli/index.js')
   .main(process.argv.slice(2))
   .then((code) => process.exit(code || 0))
   .catch((err) => {
-    process.stderr.write(`spec-guard: ${err && err.message ? err.message : err}\n`);
+    process.stderr.write(`specguard: ${err && err.message ? err.message : err}\n`);
     process.exit(1);
   });

@@ -1,16 +1,19 @@
 'use strict';
 
-// `spec-guard commit` — the deterministic terminal step of the loop. It does NOT invent the
+// `specguard commit` — the deterministic terminal step of the loop. It does NOT invent the
 // message (that's an LLM/skill job via /spec:commit); it validates + cleans a provided message,
 // then commits the current repo, or — with --all/--scope — each impacted deliverable repo in
 // order followed by the backup root (topology-aware). Enforces Conventional Commits and strips
-// any AI attribution. Optional --graphify re-syncs the knowledge graph per impacted module.
+// any AI attribution. Optional --graphify re-syncs the knowledge graph (structural/incremental)
+// per impacted module + the root merge, BEFORE committing, so the refreshed graph lands in the same
+// commit. The deep SEMANTIC pass is the agent's job (run `/graphify --mode deep` via the /spec:commit
+// workflow, or set GEMINI_API_KEY for a headless semantic pass).
 //
-//   spec-guard commit --message "feat: ..."            # current repo (staged changes)
-//   spec-guard commit --add --message "fix: ..."       # stage all first, then commit
-//   spec-guard commit --all --message "chore: ..."     # every impacted deliverable repo + root
-//   spec-guard commit --scope public-api,docs -m "..." # specific modules
-//   spec-guard commit --all -m "..." --graphify        # + per-module graphify extract/merge
+//   specguard commit --message "feat: ..."            # current repo (staged changes)
+//   specguard commit --add --message "fix: ..."       # stage all first, then commit
+//   specguard commit --all --message "chore: ..."     # every impacted deliverable repo + root
+//   specguard commit --scope public-api,docs -m "..." # specific modules
+//   specguard commit --all --graphify -m "..."        # refresh module graphs + root merge, then commit
 
 const fs = require('fs');
 const path = require('path');
@@ -62,17 +65,45 @@ function commitRepo(repoDir, message, { add }) {
   return r.status === 0 ? 'committed' : 'error';
 }
 
-function runGraphify(root, modules) {
-  // Curated-safe: per-impacted-module extract + merge into the root graph. Best-effort.
+// Stage a repo's refreshed graph dir so it commits atomically with the code.
+function stageGraph(repoDir) {
+  spawnSync('git', ['-C', repoDir, 'add', 'graphify-out'], { encoding: 'utf8' });
+}
+
+// Refresh the root repo's own graph (single-repo case). Incremental + structural; the deep
+// SEMANTIC pass is the agent's job via `/graphify --mode deep` (or needs GEMINI_API_KEY headless).
+function syncRootGraph(root) {
+  if (!graphify.available(root)) return '  graphify: not present (skipped)';
+  const r = spawnSync('graphify', ['update'], { cwd: root, encoding: 'utf8', timeout: 120000 });
+  stageGraph(root);
+  return `  graphify update (root): ${r.status === 0 ? 'ok' : 'failed (review)'}`;
+}
+
+// Backup-monorepo case: refresh each impacted module's graph, then re-merge the freshly-updated
+// module graphs into the curated root graph. Runs BEFORE the commits so every graph lands in the
+// same commit as its code. Structural/incremental + curated-safe (no naive full rebuild); the deep
+// semantic pass is the agent's job. Best-effort + fallback-safe.
+function syncModuleGraphs(root, modules) {
   if (!graphify.available(root)) return '  graphify: not present (skipped)';
   const out = [];
   for (const m of modules) {
-    const r = spawnSync('graphify', ['extract', `./${m}/`], { cwd: root, encoding: 'utf8' });
-    out.push(`    extract ${m}: ${r.status === 0 ? 'ok' : 'failed'}`);
+    const dir = path.join(root, m);
+    let r;
+    if (graphify.available(dir)) {
+      r = spawnSync('graphify', ['update'], { cwd: dir, encoding: 'utf8', timeout: 120000 });
+      out.push(`    update ${m}: ${r.status === 0 ? 'ok' : 'failed'}`);
+    } else {
+      r = spawnSync('graphify', ['extract', `./${m}/`], { cwd: root, encoding: 'utf8', timeout: 120000 });
+      out.push(`    extract ${m} (first build): ${r.status === 0 ? 'ok' : 'failed'}`);
+    }
+    stageGraph(dir);
   }
-  const merge = spawnSync('graphify', ['merge-graphs'].concat(modules.map((m) => `${m}/graphify-out/graph.json`)).concat(['--out', 'graphify-out/graph.json']), { cwd: root, encoding: 'utf8' });
-  out.push(`    merge -> root graph: ${merge.status === 0 ? 'ok' : 'failed (review; curated build is sensitive)'}`);
-  return '  graphify (curated re-merge):\n' + out.join('\n');
+  if (modules.length) {
+    const merge = spawnSync('graphify', ['merge-graphs'].concat(modules.map((m) => `${m}/graphify-out/graph.json`)).concat(['--out', 'graphify-out/graph.json']), { cwd: root, encoding: 'utf8', timeout: 120000 });
+    out.push(`    merge -> root graph: ${merge.status === 0 ? 'ok' : 'failed (review; curated build is sensitive)'}`);
+  }
+  stageGraph(root);
+  return '  graphify (pre-commit structural re-sync; run /graphify --mode deep in-agent for semantic):\n' + out.join('\n');
 }
 
 function run(args) {
@@ -83,13 +114,13 @@ function run(args) {
     (flags['message-file'] && fs.existsSync(flags['message-file']) ? fs.readFileSync(flags['message-file'], 'utf8') : null);
 
   if (!message) {
-    process.stderr.write('spec-guard commit: provide --message "type: subject" (the message is authored by you / the agent, not generated here).\n');
+    process.stderr.write('specguard commit: provide --message "type: subject" (the message is authored by you / the agent, not generated here).\n');
     return 1;
   }
 
   const clean = cleanMessage(message);
   if (!CONVENTIONAL.test(clean.split('\n')[0])) {
-    process.stderr.write(`spec-guard commit: message is not a Conventional Commit (expected "feat|fix|chore|...: subject").\n  got: ${clean.split('\n')[0]}\n`);
+    process.stderr.write(`specguard commit: message is not a Conventional Commit (expected "feat|fix|chore|...: subject").\n  got: ${clean.split('\n')[0]}\n`);
     if (!flags.force) return 1;
   }
   if (clean !== message.replace(/\s+$/, '')) {
@@ -101,6 +132,8 @@ function run(args) {
 
   // Single-repo mode.
   if (!flags.all && !flags.scope) {
+    // Graph sync BEFORE the commit so the refreshed graph is part of it.
+    if (flags.graphify) process.stdout.write(syncRootGraph(root) + '\n');
     const res = commitRepo(root, clean, { add: !!flags.add });
     process.stdout.write(res === 'committed' ? `committed (${path.basename(root)})\n` : res === 'nothing' ? 'nothing staged to commit (use --add to stage all)\n' : 'commit failed\n');
     return res === 'error' ? 1 : 0;
@@ -112,25 +145,26 @@ function run(args) {
     const want = new Set(flags.scope.split(',').map((s) => s.trim()));
     modules = modules.filter((m) => want.has(m));
   }
-  const impacted = [];
-  for (const m of modules) {
+  // Determine impacted modules (changed) up front so the graph refresh runs BEFORE any commit.
+  const changed = modules.filter((m) => {
     const dir = path.join(root, m);
-    if (fs.existsSync(path.join(dir, '.git')) && hasAnyChanges(dir)) {
-      const res = commitRepo(dir, clean, { add: true });
-      out.push(`  ${m}: ${res}`);
-      if (res === 'committed') impacted.push(m);
-    }
+    return fs.existsSync(path.join(dir, '.git')) && hasAnyChanges(dir);
+  });
+
+  if (flags.graphify) process.stdout.write(syncModuleGraphs(root, changed) + '\n');
+
+  const impacted = [];
+  for (const m of changed) {
+    const res = commitRepo(path.join(root, m), clean, { add: true });
+    out.push(`  ${m}: ${res}`);
+    if (res === 'committed') impacted.push(m);
   }
-  // Backup root last (captures everything, incl. IP).
+  // Backup root last (captures everything, incl. IP + the re-merged root graph).
   const rootRes = commitRepo(root, clean, { add: true });
   out.push(`  <root backup>: ${rootRes}`);
 
-  process.stdout.write(`spec-guard commit --all (lang=${settings.commitLanguage})\n` + out.join('\n') + '\n');
+  process.stdout.write(`specguard commit --all (lang=${settings.commitLanguage})\n` + out.join('\n') + '\n');
   process.stdout.write(`  impacted modules: ${impacted.length ? impacted.join(', ') : 'none'}\n`);
-
-  if (flags.graphify && impacted.length) {
-    process.stdout.write(runGraphify(root, impacted) + '\n');
-  }
   return 0;
 }
 

@@ -18,7 +18,7 @@ function run(args) {
 
   const repoRoot = config.findRepoRoot(start);
   if (!repoRoot) {
-    process.stderr.write("spec-guard: no .spec-guard/config.json found. Run 'spec-guard init' first.\n");
+    process.stderr.write("specguard: no .spec-guard/config.json found. Run 'specguard init' first.\n");
     return 1;
   }
 
@@ -52,7 +52,7 @@ function run(args) {
       }
     }
   }
-  process.stdout.write(`spec-guard: update complete (${validated.join(', ')})\n`);
+  process.stdout.write(`specguard: update complete (${validated.join(', ')})\n`);
   process.stdout.write('  ' + Object.entries(counts).map(([k, v]) => `${k}: ${v}`).join('  ') + '\n');
   if (diverged) process.stdout.write(`  ${diverged} user-edited file(s) protected — review the .spec-guard-update sidecars.\n`);
   return 0;

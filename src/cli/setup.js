@@ -1,5 +1,11 @@
 'use strict';
 
+// `specguard setup` — wire THIS MACHINE's agent session hooks (SessionStart/Stop) + statusline.
+// This is the machine-scoped counterpart to per-repo `init`; `uninstall --global` reverses it.
+// It is idempotent (manifest-guarded) and never touches co-tenant hook entries.
+//
+// `wireMachine()` is also called by `init --with-global` so first-run onboarding is one command.
+
 const fs = require('fs');
 const path = require('path');
 
@@ -37,29 +43,21 @@ function setStatusLine(settingsPath, statuslinePath) {
   return 'left-user-statusline';
 }
 
-function run(args) {
-  const { flags } = parseArgs(args);
-  if (!flags.global) {
-    process.stderr.write("usage: spec-guard install --global   (wires this machine's Claude Code + Codex)\n");
-    return 1;
-  }
-  const home = homeDir(flags);
-  const force = !!flags.force;
+// Wire the machine for the hook-bearing agents (claude-code, codex). Returns
+// { wired: string[], missing: string[] } — `wired` are human-readable summary lines.
+function wireMachine(home, opts) {
+  const force = !!(opts && opts.force);
   const vars = installer.renderVars({}); // global fallback skill uses defaults
   const m = manifest.load(globalManifestPath(home));
-
   const wired = [];
   const verifyPaths = [];
 
   for (const id of ['claude-code', 'codex']) {
     const agent = agents.get(id);
     const ctx = { repoRoot: null, homeDir: home };
-    // Global install always uses the home-located fallback skill dir. (For claude-code the
-    // matrix skill scope is 'repo'; globalSkillDir is the machine-level fallback under home.)
     const globalSkillDir = path.join(home, agent.globalSkillDir || agent.skill.dir);
     installer.installSkillTree(globalSkillDir, id, vars, m, `global:${id}:skill`, force);
 
-    // Hook bundle next to the skill's agent root: <agentRoot>/hooks/spec-guard/
     const agentRoot = path.dirname(path.dirname(globalSkillDir)); // .../.claude
     const hooksDir = path.join(agentRoot, 'hooks', 'spec-guard');
     installer.copyHookBundle(hooksDir, m, `global:${id}:hooks`, force);
@@ -67,8 +65,7 @@ function run(args) {
     const syncCheckPath = path.join(hooksDir, 'sync-check.sh');
     verifyPaths.push(activatePath, syncCheckPath);
 
-    const hooksConfigPath = agents.resolveHooksConfigPath(agent, ctx);
-    const actions = wireHooks(hooksConfigPath, activatePath, syncCheckPath);
+    const actions = wireHooks(agents.resolveHooksConfigPath(agent, ctx), activatePath, syncCheckPath);
 
     let statusInfo = '';
     if (id === 'claude-code') {
@@ -89,20 +86,26 @@ function run(args) {
   }
 
   manifest.save(globalManifestPath(home), m);
-
-  process.stdout.write('spec-guard: global install\n' + wired.join('\n') + '\n');
-
-  // Verify before suggesting cleanup of legacy hooks.
   const missing = verifyPaths.filter((p) => !fs.existsSync(p));
+  return { wired, missing };
+}
+
+function run(args) {
+  const { flags } = parseArgs(args);
+  const home = homeDir(flags);
+  const { wired, missing } = wireMachine(home, { force: !!flags.force });
+
+  process.stdout.write('specguard: machine setup (Claude Code + Codex session hooks)\n' + wired.join('\n') + '\n');
+
   if (missing.length) {
-    process.stderr.write('\nWARNING: expected hook files missing after install:\n  ' + missing.join('\n  ') + '\n');
+    process.stderr.write('\nWARNING: expected hook files missing after setup:\n  ' + missing.join('\n  ') + '\n');
     return 1;
   }
   process.stdout.write(
-    "\nVerified: new hook scripts exist. If you previously had loose ~/.claude/hooks/spec-guard-*.{js,sh}\n" +
+    "\nVerified: hook scripts exist. If you previously had loose ~/.claude/hooks/spec-guard-*.{js,sh}\n" +
       'from a hand-wired install, you may delete them now (the merge re-pointed settings to the packaged paths).\n'
   );
   return 0;
 }
 
-module.exports = { run };
+module.exports = { run, wireMachine };

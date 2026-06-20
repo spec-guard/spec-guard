@@ -25,7 +25,7 @@
   "author": "spec-guard",
   "type": "commonjs",
   "bin": {
-    "spec-guard": "bin/spec-guard.js"
+    "specguard": "bin/specguard.js"
   },
   "files": [
     "bin/",
@@ -39,7 +39,7 @@
   },
   "scripts": {
     "test": "node --test",
-    "spec-guard": "node bin/spec-guard.js"
+    "specguard": "node bin/specguard.js"
   },
   "publishConfig": {
     "access": "public"

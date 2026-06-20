@@ -12,7 +12,7 @@ function run(args) {
   const home = homeDir(flags);
 
   const lines = [];
-  lines.push(`spec-guard: ${config.getDefaultMode()}`);
+  lines.push(`specguard: ${config.getDefaultMode()}`);
 
   const repoRoot = config.findRepoRoot(start);
   if (repoRoot) {
@@ -27,7 +27,7 @@ function run(args) {
 
   const globalM = manifest.load(globalManifestPath(home));
   const globalCount = Object.keys(globalM.files || {}).length;
-  lines.push(`global install: ${globalCount ? `${globalCount} owned files` : 'not installed (run: spec-guard install --global)'}`);
+  lines.push(`global install: ${globalCount ? `${globalCount} owned files` : 'not installed (run: specguard setup)'}`);
 
   process.stdout.write(lines.join('\n') + '\n');
   return 0;

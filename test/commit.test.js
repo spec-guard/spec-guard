@@ -58,6 +58,57 @@ test('non-conventional message is rejected without --force', () => {
   fs.rmSync(d, { recursive: true, force: true });
 });
 
+test('-m short flag is accepted (parity with --message)', () => {
+  const { d, g } = gitRepo();
+  fs.writeFileSync(path.join(d, 'a.txt'), 'hi\n');
+  const code = silent(() => commit.run([d, '--add', '-m', 'feat: via short flag']));
+  assert.strictEqual(code, 0, '-m should be parsed as the message');
+  assert.match(g(['log', '--format=%B', '-1']).stdout, /feat: via short flag/);
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+function capture(fn) {
+  let out = '';
+  const o = process.stdout.write, e = process.stderr.write;
+  process.stdout.write = (c) => { out += c; return true; };
+  process.stderr.write = () => true;
+  try { return { code: fn(), out }; } finally { process.stdout.write = o; process.stderr.write = e; }
+}
+
+test('--graphify is fallback-safe when no graph is present (still commits)', () => {
+  const { d, g } = gitRepo();
+  fs.writeFileSync(path.join(d, 'a.txt'), 'x\n');
+  const { code, out } = capture(() => commit.run([d, '--add', '--graphify', '-m', 'feat: x']));
+  assert.strictEqual(code, 0);
+  assert.match(out, /graphify: not present \(skipped\)/);
+  assert.match(g(['log', '--format=%B', '-1']).stdout, /feat: x/);
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('--graphify refreshes the graph BEFORE the commit (refresh is in the commit)', () => {
+  const { d, g } = gitRepo();
+  // A pre-existing graph makes graphify "available"; a fake `graphify` on PATH refreshes it.
+  fs.mkdirSync(path.join(d, 'graphify-out'), { recursive: true });
+  fs.writeFileSync(path.join(d, 'graphify-out/graph.json'), '{"updated":false}\n');
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-fakebin-'));
+  fs.writeFileSync(path.join(bin, 'graphify'),
+    '#!/bin/sh\nif [ "$1" = "update" ]; then echo \'{"updated":true}\' > graphify-out/graph.json; fi\nexit 0\n');
+  fs.chmodSync(path.join(bin, 'graphify'), 0o755);
+
+  fs.writeFileSync(path.join(d, 'a.txt'), 'x\n');
+  const oldPath = process.env.PATH;
+  process.env.PATH = bin + path.delimiter + oldPath;
+  let code;
+  try { ({ code } = capture(() => commit.run([d, '--add', '--graphify', '-m', 'feat: x']))); }
+  finally { process.env.PATH = oldPath; }
+
+  assert.strictEqual(code, 0);
+  // The graph the fake rewrote must be part of HEAD — proving it was refreshed before the commit.
+  assert.match(g(['show', 'HEAD:graphify-out/graph.json']).stdout, /"updated":true/);
+  fs.rmSync(d, { recursive: true, force: true });
+  fs.rmSync(bin, { recursive: true, force: true });
+});
+
 test('missing --message errors', () => {
   const { d } = gitRepo();
   const code = silent(() => commit.run([d]));

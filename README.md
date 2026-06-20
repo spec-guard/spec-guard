@@ -29,7 +29,7 @@ mechanics along too.
   repo boundaries — something single-repo tools can't.
 - **One source, every agent.** A single skill + command set rendered per agent via a path matrix.
   Adding an agent is a row, not a fork.
-- **Commit, governed.** `spec-guard commit` produces a Conventional Commit (no AI attribution),
+- **Commit, governed.** `specguard commit` produces a Conventional Commit (no AI attribution),
   single repo or `--all` across the backup monorepo in dependency order.
 - **Reversible by design.** Every file it writes is tracked in a manifest; `update` never clobbers
   your edits, and `uninstall` removes exactly what it added (and nothing of yours).
@@ -45,14 +45,16 @@ mechanics along too.
 
 ```bash
 npm install -g @spec-guard/cli      # or run ad-hoc with: npx @spec-guard/cli <command>
-spec-guard install --global         # wire this machine's Claude Code / Codex session hooks
-spec-guard init .                   # install into the current project
+specguard init .                    # one command: pick agents, set up the project, offer to wire the machine
 ```
 
-Greenfield project? Add `--scaffold` to also lay down the `docs/` + `.private/` doc tree:
+`init` is the single front door — on a TTY it prompts for which agents to set up and offers to wire
+this machine's session hooks; pass flags to skip the prompts in CI:
 
 ```bash
-spec-guard init . --agent claude-code,codex --scaffold
+specguard init . --agent claude-code,codex --with-global --scaffold   # non-interactive, also wire the machine
+specguard init . --agent all --no-global                              # every agent, don't touch machine config
+specguard setup                                                       # (re)wire just the machine hooks + statusline
 ```
 
 ## The loop
@@ -84,9 +86,9 @@ map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:s
 
 | Command | Purpose |
 |---------|---------|
-| `init [path] [--agent …] [--scaffold] [--spec-dir …] [--plans-dir …] [--scope all]` | Install into a repo (per-agent skill, commands, hooks, rules-block) |
+| `init [path] [--agent all\|none\|…] [--with-global\|--no-global] [--scaffold] [--spec-dir …] [--plans-dir …] [--private-dir …] [--scope all]` | Install into a repo (per-agent skill, commands, hooks, rules-block); prompts on a TTY |
 | `update [path]` | Re-render owned files idempotently (manifest-guarded; never clobbers your edits) |
-| `install --global` | Wire a machine's Claude Code / Codex session hooks + statusline |
+| `setup` | Wire this machine's Claude Code / Codex session hooks + statusline |
 | `uninstall [path] [--global] [--purge] [--dry-run]` | Remove spec-guard from a repo, or from this machine |
 | `doctor [path]` | Diagnose install health, repo topology, and the IP/deliverable wall |
 | `commit [--all] [--scope …] -m …` | Conventional Commit, single repo or across the backup monorepo |
@@ -98,11 +100,13 @@ map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:s
 
 | Flag | Applies to | Meaning |
 |------|------------|---------|
-| `--agent <list>` | `init`, `uninstall` | Comma-separated agents (default: `claude-code`) |
+| `--agent <list>` | `init`, `uninstall` | Comma-separated agents, or `all` / `none` (default on a TTY: prompt; else `claude-code`) |
+| `--with-global` / `--no-global` | `init` | Wire (or skip) this machine's hooks without prompting |
 | `--scaffold` | `init` | Also create the `docs/` + `.private/` doc tree (write-if-absent) |
 | `--spec-dir` / `--plans-dir` | `init` | Override the spec/plan locations (default `docs/specs`, `docs/plans`) |
+| `--private-dir` | `init`, `migrate` | Override the IP knowledge-base location (default `.private`) |
 | `--scope all` | `init` | Treat the tree as a backup monorepo (record module list for ripple/commit order) |
-| `--global` | `install`, `uninstall` | Operate on the machine, not a repo |
+| `--global` | `uninstall` | Operate on the machine, not a repo |
 | `--purge` | `uninstall --global` | Also forget preferences (XDG config + the on/off flag) |
 | `--dry-run` | `uninstall` | Print the plan and change nothing |
 | `--force` | `init`, `update` | Overwrite even user-edited owned files (skips the sidecar guard) |
@@ -119,18 +123,18 @@ surrounding content.
 **From a project:**
 
 ```bash
-spec-guard uninstall .              # remove skill, commands, rules-block, .spec-guard/
-spec-guard uninstall . --dry-run    # preview exactly what would be removed
-spec-guard uninstall . --agent gemini   # remove only one agent's integration
+specguard uninstall .              # remove skill, commands, rules-block, .spec-guard/
+specguard uninstall . --dry-run    # preview exactly what would be removed
+specguard uninstall . --agent gemini   # remove only one agent's integration
 ```
 
 **From your workstation (the global install):**
 
 ```bash
-spec-guard uninstall --global             # unwire Claude Code / Codex hooks + statusline,
-                                          #   remove the global skill + hook bundle
-spec-guard uninstall --global --dry-run   # preview
-spec-guard uninstall --global --purge     # also forget the on/off preference + XDG config
+specguard uninstall --global             # unwire Claude Code / Codex hooks + statusline,
+                                         #   remove the global skill + hook bundle
+specguard uninstall --global --dry-run   # preview
+specguard uninstall --global --purge     # also forget the on/off preference + XDG config
 ```
 
 Co-tenant hooks (e.g. other tools wired into the same `settings.json`) are matched by identity and
@@ -169,8 +173,8 @@ Co-tenant hooks (e.g. other tools wired into the same `settings.json`) are match
 ## Migrating an existing repo
 
 ```bash
-spec-guard migrate            # dry-run: shows the plan
-spec-guard migrate --apply    # move .claude IP -> .private, docs/superpowers -> docs/{specs,plans}, sweep refs
+specguard migrate            # dry-run: shows the plan
+specguard migrate --apply    # move .claude IP -> .private, docs/superpowers -> docs/{specs,plans}, sweep refs
 ```
 
 ## Contributing

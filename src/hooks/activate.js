@@ -29,7 +29,7 @@ const PREAMBLE =
   'This loads automatically every session (no command needed). Apply it to any non-trivial ' +
   'code work BEFORE writing code. Persistence: stays active across the whole session, including ' +
   'after context compression. The reference files named below load on demand. ' +
-  'To turn it off: run "spec-guard off" (persists across sessions); "spec-guard on" re-enables.\n\n';
+  'To turn it off: run "specguard off" (persists across sessions); "specguard on" re-enables.\n\n';
 
 const FALLBACK =
   'SPEC-GUARD ACTIVE\n\n' +
@@ -73,7 +73,7 @@ function resolveSkill() {
       }
     }
     // Config found but no rendered skill -> warn, fall through to global.
-    var warn = `SPEC-GUARD: per-repo skill not rendered in ${repoRoot} — run 'spec-guard update' there.\n`;
+    var warn = `SPEC-GUARD: per-repo skill not rendered in ${repoRoot} — run 'specguard update' there.\n`;
   }
 
   // b. Sibling global (next to this hook bundle: <agentRoot>/hooks/spec-guard/ -> ../../skills/...)

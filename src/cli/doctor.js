@@ -5,6 +5,7 @@ const path = require('path');
 
 const { parseArgs, homeDir, globalManifestPath } = require('./_shared');
 const config = require('../core/config');
+const agents = require('../core/agents');
 const manifest = require('../core/manifest');
 const jsonmerge = require('../core/jsonmerge');
 const topology = require('../core/topology');
@@ -13,15 +14,20 @@ const graphify = require('../core/graphify');
 const pkg = require('../../package.json');
 
 // Machine-check mode (post-upgrade gate): no project tree required. Validates that the binary
-// loads, the global manifest's hook files exist and are readable, and version is a string.
+// loads, a global install is recorded, and every recorded hook bundle's activate.js exists on disk.
 function machineCheck(home) {
   if (typeof pkg.version !== 'string' || !pkg.version) return { ok: false, why: 'version missing' };
   const m = manifest.load(globalManifestPath(home));
-  for (const [key, rec] of Object.entries(m.files || {})) {
-    if (!/hookbundle/.test(key)) continue;
-    // key looks like global:<agent>:hooks:hookbundle:<name>; the absPath isn't stored, so we
-    // re-derive nothing here — presence of the manifest with hook entries is the signal.
-    void rec;
+  const keys = Object.keys(m.files || {});
+  if (!keys.some((k) => /hookbundle/.test(k))) {
+    return { ok: false, why: 'no global install recorded (run: specguard setup)' };
+  }
+  for (const id of ['claude-code', 'codex']) {
+    if (!keys.some((k) => k.startsWith(`global:${id}:hooks`))) continue;
+    const agent = agents.get(id);
+    const agentRoot = path.dirname(path.dirname(path.join(home, agent.globalSkillDir || agent.skill.dir)));
+    const activate = path.join(agentRoot, 'hooks', 'spec-guard', 'activate.js');
+    if (!fs.existsSync(activate)) return { ok: false, why: `missing hook bundle: ${activate}` };
   }
   return { ok: true };
 }
@@ -54,7 +60,7 @@ function run(args) {
   }
 
   const start = path.resolve(positionals[0] || '.');
-  const lines = [`spec-guard doctor (v${pkg.version})`];
+  const lines = [`specguard doctor (v${pkg.version})`];
   lines.push(`mode: ${config.getDefaultMode()}`);
 
   const repoRoot = config.findRepoRoot(start);
@@ -66,7 +72,7 @@ function run(args) {
   }
 
   const globalM = manifest.load(globalManifestPath(home));
-  lines.push(`global install: ${Object.keys(globalM.files || {}).length ? 'present' : 'absent (run install --global)'}`);
+  lines.push(`global install: ${Object.keys(globalM.files || {}).length ? 'present' : 'absent (run: specguard setup)'}`);
 
   lines.push('hook entries:');
   const di = doubleInjectionReport(home);

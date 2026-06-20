@@ -1,6 +1,6 @@
 'use strict';
 
-// Reusable install building blocks shared by `init` (per-repo) and `install --global`
+// Reusable install building blocks shared by `init` (per-repo) and `setup`
 // (machine). Everything goes through the manifest guard so re-runs are idempotent and never
 // clobber user-edited files.
 

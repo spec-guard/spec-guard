@@ -19,7 +19,7 @@ spec-guard dogfoods its own governance: changes follow the spec-driven loop
 ```bash
 npm install
 npm test
-node bin/spec-guard.js --help
+node bin/specguard.js --help
 ```
 
 ## Adding a new agent

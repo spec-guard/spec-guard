@@ -21,6 +21,6 @@ jobs:
       - name: Verify no IP leaks into the npm tarball
         run: |
           npm pack --dry-run --json > /tmp/pack.json
-          if grep -q '"\.claude' /tmp/pack.json || grep -q '/.claude/' /tmp/pack.json; then
-            echo "::error::.claude/ would ship in the tarball"; exit 1
+          if grep -Eq '"\.claude|/\.claude/|"\.private|/\.private/|secrets\.local' /tmp/pack.json; then
+            echo "::error::internal IP (.claude/, .private/, or secrets) would ship in the tarball"; exit 1
           fi

@@ -1,6 +1,6 @@
 'use strict';
 
-// Reverse of `init` (per-repo) and `install --global` (machine). Symmetric with the installer:
+// Reverse of `init` (per-repo) and `setup` (machine). Symmetric with the installer:
 // it recomputes every owned path from the agent matrix and removes it, strips the managed
 // rules-block in place (never deleting the user's rules file), and unwires the lifecycle hooks
 // by logical identity (co-tenant hooks are never touched). `--dry-run` prints the plan and
@@ -119,11 +119,11 @@ function runRepo(flags, positionals) {
   // Drop the repo control dir (config + manifest) unless scoping to a subset of agents.
   if (!flags.agent) rmDir(path.join(repoRoot, '.spec-guard'), plan, dry);
 
-  process.stdout.write(`spec-guard: uninstall ${dry ? '(dry-run) ' : ''}from ${repoRoot}\n`);
+  process.stdout.write(`specguard: uninstall ${dry ? '(dry-run) ' : ''}from ${repoRoot}\n`);
   process.stdout.write(plan.length ? '  ' + plan.join('\n  ') + '\n' : '  nothing to remove (not installed?)\n');
   if (!dry) {
     process.stdout.write('  done. Your docs/, specs, plans, and .private/ were left untouched.\n');
-    process.stdout.write("  (global hooks remain — run 'spec-guard uninstall --global' to unwire this machine.)\n");
+    process.stdout.write("  (global hooks remain — run 'specguard uninstall --global' to unwire this machine.)\n");
   }
   return 0;
 }
@@ -178,12 +178,13 @@ function runGlobal(flags) {
   rmDirIfEmpty(path.dirname(globalManifestPath(home)), plan, dry);
 
   if (purge) {
-    // Forget preferences: the on/off flag and the XDG config dir.
+    // Forget preferences: the on/off flag and the config dir (XDG/%APPDATA%/~/.config aware,
+    // the same dir setDefaultMode + self LKG write to).
     rmFile(path.join(home, '.claude', '.spec-guard-active'), plan, dry);
-    rmDir(path.join(home, '.config', 'spec-guard'), plan, dry);
+    rmDir(config.getConfigDir(home), plan, dry);
   }
 
-  process.stdout.write(`spec-guard: global uninstall ${dry ? '(dry-run) ' : ''}(${home})\n`);
+  process.stdout.write(`specguard: global uninstall ${dry ? '(dry-run) ' : ''}(${home})\n`);
   process.stdout.write(plan.length ? '  ' + plan.join('\n  ') + '\n' : '  nothing wired (already clean)\n');
   if (!dry && !purge) {
     process.stdout.write("  preferences kept (on/off state). Re-run with --purge to also forget those.\n");

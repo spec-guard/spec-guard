@@ -19,17 +19,21 @@ const os = require('os');
 
 const VALID_MODES = ['on', 'off'];
 
-function getConfigDir() {
+// `homeBase` overrides the home root for the non-XDG/non-APPDATA fallback (used by the install/
+// uninstall path so SPEC_GUARD_HOME / --home keep tests hermetic). Runtime callers (hooks, self)
+// pass nothing and resolve against the real home.
+function getConfigDir(homeBase) {
+  const home = homeBase || os.homedir();
   if (process.env.XDG_CONFIG_HOME) {
     return path.join(process.env.XDG_CONFIG_HOME, 'spec-guard');
   }
   if (process.platform === 'win32') {
     return path.join(
-      process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'),
+      process.env.APPDATA || path.join(home, 'AppData', 'Roaming'),
       'spec-guard'
     );
   }
-  return path.join(os.homedir(), '.config', 'spec-guard');
+  return path.join(home, '.config', 'spec-guard');
 }
 
 function getConfigPath() {

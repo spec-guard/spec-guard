@@ -131,13 +131,13 @@ function run(args) {
   }
 
   const mode = apply ? 'APPLIED' : 'DRY-RUN (pass --apply to execute)';
-  const out = [`spec-guard migrate — ${mode}`, `repo: ${root}   privateDir: ${privateDir}`, ''];
+  const out = [`specguard migrate — ${mode}`, `repo: ${root}   privateDir: ${privateDir}`, ''];
   out.push(`moves (${moves.length}):`);
   for (const [from, to] of moves) out.push(`  ${from}  ->  ${to}`);
   out.push(`reference sweep: ${sweepHits} replacements in ${sweepFiles} files`);
   out.push(`.gitignore: ${giCount} files ${apply ? 'updated' : 'would gain'} ${privateDir}/`);
   if (!apply) out.push('', "Re-run with --apply, then `git add -A` (git detects the renames) and review before committing.");
-  else out.push('', 'Done. Run `spec-guard init` if not yet initialized, then `git add -A` and review.');
+  else out.push('', 'Done. Run `specguard init` if not yet initialized, then `git add -A` and review.');
   process.stdout.write(out.join('\n') + '\n');
   return 0;
 }

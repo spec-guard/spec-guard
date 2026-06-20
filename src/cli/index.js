@@ -16,7 +16,7 @@ const COMMANDS = {
   toggle: { summary: 'Governance switch: on | off | toggle.' },
   on: { summary: 'Enable spec-guard (persists across sessions).' },
   off: { summary: 'Disable spec-guard (persists across sessions).' },
-  install: { summary: "Bootstrap a machine's global agent config (use: install --global)." },
+  setup: { summary: "Wire this machine's agent session hooks + statusline (the machine-scoped counterpart to init)." },
   uninstall: { summary: 'Remove spec-guard from a repo, or --global from this machine (--purge, --dry-run).' },
   migrate: { summary: 'Transitional: upgrade an old-model repo (.claude IP, docs/superpowers) to the current layout. Dry-run unless --apply.' },
   commit: { summary: 'Commit the loop result: validate Conventional Commit (no AI attribution), current repo or --all/--scope across the backup monorepo.' },
@@ -37,9 +37,9 @@ function printVersion() {
 
 function printHelp() {
   const lines = [
-    `spec-guard ${pkg.version} — ${pkg.description}`,
+    `specguard ${pkg.version} — ${pkg.description}`,
     '',
-    'Usage: spec-guard <command> [options]',
+    'Usage: specguard <command> [options]',
     '',
     'Commands:',
   ];
@@ -63,7 +63,7 @@ async function main(argv) {
   }
 
   if (!Object.prototype.hasOwnProperty.call(COMMANDS, first)) {
-    process.stderr.write(`spec-guard: unknown command '${first}'. Run 'spec-guard --help'.\n`);
+    process.stderr.write(`specguard: unknown command '${first}'. Run 'specguard --help'.\n`);
     return 1;
   }
 
@@ -78,7 +78,7 @@ async function main(argv) {
 
   const cmd = loadCommand(name);
   if (!cmd || typeof cmd.run !== 'function') {
-    process.stderr.write(`spec-guard: '${name}' is planned but not implemented yet.\n`);
+    process.stderr.write(`specguard: '${name}' is planned but not implemented yet.\n`);
     return 0;
   }
   return (await cmd.run(cmdArgs)) || 0;
