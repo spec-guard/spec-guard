@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci || npm install
+      - run: npm test
+      - name: Verify no IP leaks into the npm tarball
+        run: |
+          npm pack --dry-run --json > /tmp/pack.json
+          if grep -q '"\.claude' /tmp/pack.json || grep -q '/.claude/' /tmp/pack.json; then
+            echo "::error::.claude/ would ship in the tarball"; exit 1
+          fi

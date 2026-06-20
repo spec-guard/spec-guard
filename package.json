@@ -1,0 +1,47 @@
+{
+  "name": "@spec-guard/cli",
+  "version": "0.0.0",
+  "description": "Spec-driven development governance for AI coding agents — context before code, spec before edits, verify against the spec.",
+  "keywords": [
+    "spec-driven-development",
+    "sdd",
+    "ai",
+    "claude-code",
+    "codex",
+    "github-copilot",
+    "gemini",
+    "governance",
+    "monorepo"
+  ],
+  "homepage": "https://github.com/spec-guard/spec-guard#readme",
+  "bugs": {
+    "url": "https://github.com/spec-guard/spec-guard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spec-guard/spec-guard.git"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "spec-guard",
+  "type": "commonjs",
+  "bin": {
+    "spec-guard": "bin/spec-guard.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "skill/",
+    "templates/",
+    "schemas/"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "spec-guard": "node bin/spec-guard.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

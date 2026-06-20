@@ -1,0 +1,21 @@
+# Intellectual property — never shipped (the tool whose brand is the IP wall must obey it)
+.claude/
+.codex/
+.gemini/
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+*.tgz
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# spec-guard local state (when dogfooding on this repo)
+.spec-guard/
