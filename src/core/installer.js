@@ -158,6 +158,54 @@ function installGeminiExtension(agent, ctx, vars, m, keyspace, force) {
   return actions;
 }
 
+// Greenfield project scaffold: the proven deliverable + IP doc structure. Never clobbers
+// existing files (write-if-absent), so it is safe to run on a partially-populated repo.
+function scaffoldProject(repoRoot, vars) {
+  const created = [];
+  const dirs = [
+    vars.specDir,
+    vars.plansDir,
+    'docs/architecture',
+    'docs/reference/decisions',
+    'docs/runbooks',
+    'docs/guides',
+    'docs/standards',
+    'docs/product',
+    'docs/templates',
+    '.claude/docs/troubleshootings',
+    '.claude/docs/action_plans',
+    '.claude/docs/audits',
+    '.claude/docs/reviews',
+    '.claude/docs/standards',
+    '.claude/docs/templates',
+  ];
+  for (const d of dirs) fs.mkdirSync(path.join(repoRoot, d), { recursive: true });
+
+  const writeIfAbsent = (rel, content) => {
+    const abs = path.join(repoRoot, rel);
+    if (!fs.existsSync(abs)) {
+      fs.mkdirSync(path.dirname(abs), { recursive: true });
+      fs.writeFileSync(abs, content);
+      created.push(rel);
+    }
+  };
+
+  const scaffoldDir = path.join(PKG_ROOT, 'templates', 'project-scaffold');
+  const sub = (rel) => render.substitute(fs.readFileSync(path.join(scaffoldDir, rel), 'utf8'), vars);
+
+  writeIfAbsent(path.join(vars.specDir, 'README.md'),
+    `# Specs\n\nLiving, per-feature specs (In-Scope / Out-of-Scope / Acceptance / Traceability / Status).\nPlans live in \`${vars.plansDir}\`; ADRs in \`docs/reference/decisions/\`.\n`);
+  writeIfAbsent(path.join(vars.plansDir, 'README.md'),
+    `# Plans\n\nImplementation plans paired with the specs in \`${vars.specDir}\`.\n`);
+  writeIfAbsent('docs/templates/spec-template.md', sub('templates/spec-template.md'));
+  writeIfAbsent('docs/templates/plan-template.md', sub('templates/plan-template.md'));
+  writeIfAbsent('docs/templates/adr-template.md', sub('templates/adr-template.md'));
+  writeIfAbsent('CLAUDE.md', sub('CLAUDE.md'));
+  writeIfAbsent('.claude/.gitignore-hint', '# This .claude/ tree is intellectual property — add `.claude/` to each deliverable repo .gitignore.\n');
+
+  return created;
+}
+
 // Apply the full per-agent repo install for a list of agents. Shared by `init` and `update`.
 // Returns [{ id, acts }].
 function applyAgents(ctx, agentList, vars, m, opts) {
@@ -184,5 +232,6 @@ module.exports = {
   copyHookBundle,
   statuslineCombinedContent,
   installGeminiExtension,
+  scaffoldProject,
   applyAgents,
 };

@@ -8,21 +8,7 @@ const config = require('../core/config');
 const agents = require('../core/agents');
 const manifest = require('../core/manifest');
 const installer = require('../core/installer');
-
-function minimalScaffold(repoRoot, specDir, plansDir) {
-  for (const rel of [specDir, plansDir, 'docs/architecture', 'docs/reference/decisions']) {
-    fs.mkdirSync(path.join(repoRoot, rel), { recursive: true });
-  }
-  const readme = path.join(repoRoot, specDir, 'README.md');
-  if (!fs.existsSync(readme)) {
-    fs.writeFileSync(
-      readme,
-      '# Specs\n\nLiving, per-feature specs (In-Scope / Out-of-Scope / Acceptance / Traceability / Status).\nPlans live in `' +
-        plansDir +
-        '`; ADRs in `docs/reference/decisions/`.\n'
-    );
-  }
-}
+const topology = require('../core/topology');
 
 function reportDiverged(summary) {
   const diverged = [];
@@ -57,11 +43,28 @@ function run(args) {
   const force = !!flags.force;
 
   const settings = { specDir, plansDir, agents: agentList };
+
+  // Topology: record backup-monorepo + module list so the rules/ripple logic is repo-aware.
+  const t = topology.detect(repoRoot, { reinit: true });
+  if (t.kind === 'multi-git-root' || flags.scope === 'all') {
+    settings.backupMonorepo = true;
+    settings.modules = t.modules;
+  }
+  if (t.kind === 'deliverable-subrepo') {
+    process.stdout.write(
+      'Note: this looks like a deliverable sub-repo inside a backup monorepo. Multi-repo management\n' +
+        'is best run from the root; installing local-only here.\n'
+    );
+  }
+
   const vars = installer.renderVars(settings);
   const ctx = { repoRoot, homeDir: home };
   const skipRules = isSpecGuardRepo(repoRoot);
 
-  if (flags.scaffold) minimalScaffold(repoRoot, specDir, plansDir);
+  if (flags.scaffold) {
+    const created = installer.scaffoldProject(repoRoot, vars);
+    if (created.length) process.stdout.write(`scaffolded ${created.length} doc file(s): ${created.join(', ')}\n`);
+  }
 
   config.writeRepoConfig(repoRoot, settings);
   const repoManifestPath = path.join(repoRoot, '.spec-guard', 'manifest.json');

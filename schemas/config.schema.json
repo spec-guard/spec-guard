@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/spec-guard/spec-guard/schemas/config.schema.json",
+  "title": "spec-guard repo config (.spec-guard/config.json)",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "specDir": { "type": "string", "description": "Deliverable specs directory (default docs/specs)." },
+    "plansDir": { "type": "string", "description": "Deliverable plans directory (default docs/plans)." },
+    "agents": {
+      "type": "array",
+      "items": { "enum": ["claude-code", "codex", "github-copilot", "gemini"] },
+      "description": "Agents this repo is wired for."
+    },
+    "modules": { "type": "array", "items": { "type": "string" }, "description": "Deliverable module repo names (backup-monorepo)." },
+    "backupMonorepo": { "type": "boolean", "description": "True when this root is a backup monorepo managing deliverable sub-repos." },
+    "manifestVersion": { "type": "integer" }
+  }
+}

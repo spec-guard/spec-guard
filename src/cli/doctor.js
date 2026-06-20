@@ -7,6 +7,9 @@ const { parseArgs, homeDir, globalManifestPath } = require('./_shared');
 const config = require('../core/config');
 const manifest = require('../core/manifest');
 const jsonmerge = require('../core/jsonmerge');
+const topology = require('../core/topology');
+const lint = require('../core/lint');
+const graphify = require('../core/graphify');
 const pkg = require('../../package.json');
 
 // Machine-check mode (post-upgrade gate): no project tree required. Validates that the binary
@@ -69,11 +72,25 @@ function run(args) {
   const di = doubleInjectionReport(home);
   lines.push(...(di.length ? di : ['  (no agent hook configs found)']));
 
-  // Topology + IP/deliverable wall lint land in Phase 3.
-  lines.push('topology + wall lint: available after the differentiators phase');
+  // Topology
+  const topoRoot = repoRoot || start;
+  const t = topology.detect(topoRoot, { reinit: true });
+  lines.push(`topology: ${t.kind}` + (t.modules.length ? ` (${t.modules.length} module repos)` : ''));
+  if (t.backupMonorepo) lines.push('  backup-monorepo: yes' + (t.transientGitBackup ? ' (a module .git is currently .git_backup)' : ''));
+
+  // IP/deliverable wall
+  const violations = lint.lintRepo(topoRoot);
+  if (violations.length) {
+    lines.push(`wall: ${violations.length} violation(s) — docs/ files linking into .claude/:`);
+    for (const v of violations.slice(0, 20)) lines.push(`  ${path.relative(topoRoot, v.file)}:${v.line}  ${v.text}`);
+  } else {
+    lines.push('wall: clean (no docs/ -> .claude/ hyperlinks)');
+  }
+
+  lines.push(`graphify: ${graphify.available(topoRoot) ? 'available (ORIENT/VERIFY can use it)' : 'not present (grep/read fallback)'}`);
 
   process.stdout.write(lines.join('\n') + '\n');
-  return 0;
+  return violations.length ? 2 : 0;
 }
 
 module.exports = { run, machineCheck };
