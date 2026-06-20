@@ -1,6 +1,6 @@
 {
   "name": "@spec-guard/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Spec-driven development governance for AI coding agents — context before code, spec before edits, verify against the spec.",
   "keywords": [
     "spec-driven-development",
