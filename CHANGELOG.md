@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.4...cli-v0.3.5) (2026-06-21)
+
+
+### Features
+
+* convention reference docs + scaffold templates for BUILD-phase governance ([c3373dd](https://github.com/spec-guard/spec-guard/commit/c3373dd32f167a2a7a269bddfde9a66040c97c44))
+
 ## [0.3.4](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.3...cli-v0.3.4) (2026-06-20)
 
 
