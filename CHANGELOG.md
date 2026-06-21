@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.6](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.5...cli-v0.3.6) (2026-06-21)
+
+
+### Features
+
+* brownfield single-source guard + doctor placeholder check; harden convention docs ([2c409af](https://github.com/spec-guard/spec-guard/commit/2c409afaa5929a1e7ff4ccda6824966f980e1c5c))
+
 ## [0.3.5](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.4...cli-v0.3.5) (2026-06-21)
 
 
