@@ -2,7 +2,8 @@
 
 Logging, metrics, and tracing — instrumentation is part of "done", not an afterthought. Go through the
 repo's logging/telemetry seam and emit what its contract requires; a feature that ships without the
-logs/metrics/traces the repo expects is incomplete even when its tests pass.
+logs/metrics/traces the repo expects is incomplete even when its tests pass. **These are rules, not
+suggestions — a deviation is a defect to fix, not a style choice.**
 
 ## Contents
 - The universal rules
@@ -56,7 +57,7 @@ Never stand up a parallel logging mechanism alongside the existing one.
 
 ## How to verify
 
-- Grep the change for raw `print`/`console.log`/stdout writes — there should be none.
+- Grep the change for raw `print`/`console.log`/stdout writes — there must be none.
 - Does the new code log its lifecycle with structured context, emit the required metric, and propagate
   the correlation id?
 - No PII/secret in any log line.

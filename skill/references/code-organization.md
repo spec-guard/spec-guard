@@ -3,7 +3,8 @@
 Where new code goes, how modules expose themselves, and how they import each other. The rule is not
 "use this structure" — it's **find the structure the repo already has and add to it the same way**. A
 file dropped in the wrong layer, a barrel where siblings have none, or an import that points the wrong
-way is a regression even when the code compiles. Re-check before BUILD is done.
+way is a regression even when the code compiles. Re-check before BUILD is done. **These are rules, not
+suggestions — a deviation is a defect to fix, not a style choice.**
 
 ## Contents
 - The universal rules

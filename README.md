@@ -164,7 +164,7 @@ map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:s
 | `update [path]` | Re-render owned files idempotently (manifest-guarded; never clobbers your edits) |
 | `setup` | Wire this machine's Claude Code / Codex session hooks + statusline |
 | `uninstall [path] [--global] [--purge] [--dry-run]` | Remove spec-guard from a repo, or from this machine |
-| `doctor [path]` | Diagnose install health, repo topology, and the IP/deliverable wall |
+| `doctor [path]` | Diagnose install health, repo topology, the IP/deliverable wall, and unfilled convention-doc placeholders |
 | `commit [--all] [--scope …] [--graphify] -m …` | Commit a message **you** author (validated as Conventional, AI attribution stripped), single repo or across the backup monorepo; `--graphify` refreshes the knowledge graph first |
 | `migrate [--apply]` | Transitional: upgrade an old-model repo to the current layout |
 | `self check\|upgrade\|rollback [--dry-run] [--tag …] [--force]` | Update the CLI itself. `upgrade` is idempotent (skips when already on the latest; `--force` reinstalls); a real upgrade also refreshes this machine's hooks (only if already wired) and reminds you to `update` your repos |
@@ -179,7 +179,7 @@ Run `specguard <command> --help` for per-command usage, subcommands, and flags.
 |------|------------|---------|
 | `--agent <list>` | `init`, `uninstall` | Comma-separated agents, or `all` / `none` (default on a TTY: prompt; else `claude-code`) |
 | `--with-global` / `--no-global` | `init` | Wire (or skip) this machine's hooks without prompting |
-| `--scaffold` | `init` | Also create the `docs/` + `.private/` doc tree **and seed fill-in starter docs** (architecture, error-handling, schema, observability, coding-guidelines) — all write-if-absent |
+| `--scaffold` | `init` | Also create the `docs/` + `.private/` doc tree **and seed fill-in starter docs** (architecture, error-handling, schema, observability, coding-guidelines) — all write-if-absent. Each convention doc is single-source: on a brownfield repo, replace any that duplicates an existing doc with a one-line pointer (`doctor` flags unfilled ones) |
 | `--spec-dir` / `--plans-dir` | `init` | Override the spec/plan locations (default `docs/specs`, `docs/plans`) |
 | `--private-dir` | `init`, `migrate` | Override the IP knowledge-base location (default `.private`) |
 | `--scope all` | `init` | Treat the tree as a backup monorepo (record module list for ripple/commit order) |

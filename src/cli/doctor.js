@@ -94,6 +94,15 @@ function run(args) {
     lines.push(`wall: clean (no docs/ -> ${privateDir}/ or agent-dir hyperlinks)`);
   }
 
+  // Scaffolded convention docs left as unfilled placeholders (warn-only; never changes exit code).
+  const placeholders = lint.findScaffoldPlaceholders(topoRoot);
+  if (placeholders.length) {
+    lines.push(`scaffold: ${placeholders.length} convention doc(s) still hold the placeholder — fill them or replace with a 1-line pointer:`);
+    for (const f of placeholders.slice(0, 20)) lines.push(`  ${path.relative(topoRoot, f)}`);
+  } else {
+    lines.push('scaffold: clean (no unfilled convention-doc placeholders)');
+  }
+
   lines.push(`graphify: ${graphify.available(topoRoot) ? 'available (ORIENT/VERIFY can use it)' : 'not present (grep/read fallback)'}`);
 
   process.stdout.write(lines.join('\n') + '\n');

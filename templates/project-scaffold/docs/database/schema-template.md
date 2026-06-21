@@ -1,6 +1,8 @@
 # Schema: <schema_or_table_name>
 
-> Starter template for documenting one database schema/table. Copy it per owned schema. Fill the `<…>`.
+> **Reusable template (copy per table).** This is NOT a fill-once doc — copy it to document each owned
+> schema/table and fill the `<…>`. If your project keeps a single aggregate schema doc, this template
+> complements it (one file per table); it never replaces it.
 
 ## Overview
 

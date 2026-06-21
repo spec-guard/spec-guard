@@ -1,7 +1,11 @@
+<!-- spec-guard:scaffold-placeholder -->
 # Code Architecture — <Project>
 
-> Starter template. Document **this** project's structure so any agent or new developer conforms to it.
-> Fill the `<…>` placeholders and delete the guidance lines. Companion: `docs/standards/coding-guidelines.md`.
+> **Single source of truth — rigid.** Fill this in with YOUR project's actual code architecture (layering,
+> where each file goes). If your project already documents its architecture elsewhere, do NOT fill this in
+> — replace this whole file with a one-line pointer to that canonical doc. Never keep two docs on one
+> topic. Delete this banner and the comment line above once filled (or replaced with a pointer).
+> Companion: `docs/standards/coding-guidelines.md`.
 
 ## Organizing principle
 

@@ -3,7 +3,8 @@
 Which error you raise, where it's caught, and how it reaches the caller. Conform to the hierarchy the
 repo already has — **never fork a parallel base error or invent a new envelope**. A business rule that
 fails with a raw `Exception`, or a handler that maps a known error to the wrong status, is a regression.
-Re-check before VERIFY is done.
+Re-check before VERIFY is done. **These are rules, not suggestions — a deviation is a defect to fix, not a
+style choice.**
 
 ## Contents
 - The universal rules
@@ -57,7 +58,8 @@ A central handler registry maps each error to a status and the canonical envelop
 | integration / external failure | 502 |
 | infra error + uncaught fallback | 500 |
 
-Canonical body (one shape for every error):
+Define **exactly one** canonical body and route every error through it — never fork a second shape. The
+shape itself is the repo's to choose; example:
 ```json
 { "detail": [ { "type": "snake_case_code", "msg": "Client-safe message", "context": {} } ] }
 ```

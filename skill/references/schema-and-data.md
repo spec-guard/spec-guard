@@ -3,7 +3,8 @@
 Changing the shape of stored data. Match **how this repo defines and migrates schema**, and remember a
 schema change is never code alone. This doc covers *how schema is defined and documented*; the
 FK/migration/version invariants you must satisfy live in `anti-regression.md` ("Data & contracts") —
-this extends them, it doesn't restate them.
+this extends them, it doesn't restate them. **These are rules, not suggestions — a deviation is a defect
+to fix, not a style choice.**
 
 ## Contents
 - The universal rules

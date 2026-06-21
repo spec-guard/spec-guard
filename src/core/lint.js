@@ -65,4 +65,20 @@ function lintRepo(repoRoot, opts) {
   return lintDocsDir(path.join(repoRoot, docsRel), forbidden);
 }
 
-module.exports = { buildWallRegex, lintDocsDir, lintRepo, DEFAULT_AGENT_DIRS };
+const SCAFFOLD_PLACEHOLDER = '<!-- spec-guard:scaffold-placeholder -->';
+
+// Find scaffolded convention docs left as unfilled placeholders (they retain the sentinel comment until
+// filled in or replaced with a one-line pointer). Stack-agnostic; mirrors the wall lint's docs/ walk.
+// Returns absolute file paths.
+function findScaffoldPlaceholders(repoRoot, opts) {
+  const options = opts || {};
+  const docsDir = path.join(repoRoot, options.docsRel || 'docs');
+  const found = [];
+  if (!fs.existsSync(docsDir)) return found;
+  for (const file of walkMarkdown(docsDir, [])) {
+    if (fs.readFileSync(file, 'utf8').includes(SCAFFOLD_PLACEHOLDER)) found.push(file);
+  }
+  return found;
+}
+
+module.exports = { buildWallRegex, lintDocsDir, lintRepo, findScaffoldPlaceholders, SCAFFOLD_PLACEHOLDER, DEFAULT_AGENT_DIRS };

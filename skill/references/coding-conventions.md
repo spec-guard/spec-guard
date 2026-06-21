@@ -2,7 +2,8 @@
 
 In-file house style: how a line of code should read so it looks like the code already there. Structure
 lives in `code-organization.md`; this is the grain at the statement level. Before writing, open a
-sibling file and match it.
+sibling file and match it. **These are rules, not suggestions — a deviation is a defect to fix, not a
+style choice.**
 
 ## Contents
 - The universal rules

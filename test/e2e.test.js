@@ -123,7 +123,7 @@ test('install --global is idempotent', () => {
   }
 });
 
-test('greenfield --scaffold builds the doc tree; doctor wall is clean (exit 0)', () => {
+test('greenfield --scaffold builds the doc tree; doctor wall clean + flags unfilled placeholders (exit 0)', () => {
   const { home, repo, cleanup } = sandbox();
   try {
     sg(home, ['init', repo, '--agent', 'claude-code', '--scaffold', '--spec-dir', 'docs/specs']);
@@ -133,6 +133,13 @@ test('greenfield --scaffold builds the doc tree; doctor wall is clean (exit 0)',
     const d = sgStatus(home, ['doctor', repo]);
     assert.strictEqual(d.status, 0, 'doctor exit 0 on clean wall');
     assert.match(d.stdout, /wall: clean/);
+    // The 4 fill-once convention docs carry the placeholder sentinel; doctor warns but never fails.
+    assert.match(d.stdout, /scaffold: 4 convention doc\(s\) still hold the placeholder/);
+    // Resolving one (redirect to a one-line pointer, dropping the sentinel) reduces the count; exit stays 0.
+    fs.writeFileSync(path.join(repo, 'docs/standards/error-handling.md'), '# Error Handling\n\nSee [architecture/error-handling.md](../architecture/error-handling.md).\n');
+    const d2 = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d2.status, 0, 'placeholder warning never changes exit code');
+    assert.match(d2.stdout, /scaffold: 3 convention doc\(s\) still hold the placeholder/);
   } finally {
     cleanup();
   }

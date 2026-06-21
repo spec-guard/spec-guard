@@ -1,7 +1,10 @@
+<!-- spec-guard:scaffold-placeholder -->
 # Observability — <Project>
 
-> Starter template. Document **this** project's logging/metrics/tracing contract so every feature ships
-> instrumented. Fill the `<…>`.
+> **Single source of truth — rigid.** Fill this in with YOUR project's actual observability contract
+> (logging, metrics, tracing). If your project already documents observability elsewhere, do NOT fill this
+> in — replace this whole file with a one-line pointer to that canonical doc. Never keep two docs on one
+> topic. Delete this banner and the comment line above once filled (or replaced with a pointer).
 
 ## Logging seam (mandatory)
 

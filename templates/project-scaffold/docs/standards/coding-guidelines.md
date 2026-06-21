@@ -1,7 +1,11 @@
+<!-- spec-guard:scaffold-placeholder -->
 # Coding Guidelines — <Project>
 
-> Starter template. Document **this** project's in-file house style so code reads consistently.
-> Fill the `<…>`. Structure/layering lives in `docs/architecture/code-architecture.md`.
+> **Single source of truth — rigid.** Fill this in with YOUR project's actual in-file house style. If your
+> project already documents coding guidelines elsewhere, do NOT fill this in — replace this whole file
+> with a one-line pointer to that canonical doc. Never keep two docs on one topic. Delete this banner and
+> the comment line above once filled (or replaced with a pointer).
+> Structure/layering lives in `docs/architecture/code-architecture.md`.
 
 ## Principles
 
