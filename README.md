@@ -96,12 +96,13 @@ specguard setup                                                       # (re)wire
 
    | Command | When |
    |---------|------|
-   | `/spec` | Show the loop and where the current task stands |
+   | `/spec` | Show the loop, the phase commands, and where the current task stands |
    | `/spec:orient` | Load the docs/ADRs governing the surface you're about to touch |
    | `/spec:write` | Locate or write the spec (scope, acceptance, traceability) |
    | `/spec:verify` | Check the result against the spec + run the test/lint gate |
    | `/spec:sync` | Update the docs/contracts the change affects |
    | `/spec:commit` | Refresh the knowledge graph (if present), then commit (Conventional, no AI attribution) |
+   | `/spec:status` | Print the loop checklist and mark the current step (anytime) |
 
 4. **Turn it off / on** anytime: `specguard off` / `specguard on` (persists across sessions).
 5. **Something not working?** `specguard doctor` checks install health, repo topology, and the
@@ -133,18 +134,42 @@ after an upgrade.
 
 ## The loop
 
+Each phase has a governance command — **except PLAN and BUILD, which have none: those are where you
+do the actual work** (compose with your planning and TDD tools). Note SPEC's command is `/spec:write`
+(you *write* the spec):
+
 ```
-1. ORIENT  — read the repo's governing docs/ADRs before touching code
-2. SPEC    — locate or write the spec (scope, acceptance, traceability)
-3. PLAN    — decompose into small verifiable increments
-4. BUILD   — implement one increment; match the surrounding code
-5. VERIFY  — check output against the spec + anti-regression invariants; run tests
-6. SYNC    — update docs/contracts/cross-references; commit
+   Phase     Command        What you do
+1. ORIENT    /spec:orient   read the repo's governing docs/ADRs before touching code
+2. SPEC      /spec:write    locate or write the spec (scope, acceptance, traceability)
+3. PLAN      —              decompose into small verifiable increments
+4. BUILD     —              implement one increment; match the surrounding code
+5. VERIFY    /spec:verify   check output against the spec + anti-regression invariants; run tests
+6. SYNC      /spec:sync     update docs/contracts/cross-references
 ```
 
-Run `/spec` for the umbrella — it prints the loop and shows where the task stands. The phases
-map to it: `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:status`,
-`/spec:commit`.
+`/spec` prints this map and marks where you stand; `/spec:commit` then refreshes the knowledge graph
+(if present) and commits (Conventional, no AI attribution); `/spec:status` marks the current step
+anytime.
+
+### The loop in practice
+
+A real task: **add a `currency` field to `POST /orders`.** It looks like one endpoint, but it's a
+contract change that ripples through the DB schema, the shared DTO, the `OrderCreated` event, and
+the docs — exactly the kind of work where a coding agent, left alone, edits the handler and calls it
+done. Here's the same change run through the loop:
+
+| Phase | Command | What spec-guard makes you do |
+|-------|---------|------------------------------|
+| **ORIENT** | `/spec:orient` | Read the repo + module `CLAUDE.md` and the ADR that governs the orders API **before** touching code. If the doc and the code disagree, that's a finding to surface — not a coin-flip to silently resolve. |
+| **SPEC** | `/spec:write` | Write the contract down: **In-Scope** (`currency` on the request + the event), **Out-of-Scope** (no FX conversion, no backfill), **Acceptance Criteria** (`an unknown currency code is rejected 422`; `OrderCreated carries currency`), **Traceability** (which ADR it implements). Architectural or irreversible? Get sign-off before coding. |
+| **PLAN** | — | Map the ripple and decompose: migration → the **shared** `Currency` enum (reuse it, never fork a local copy) → request DTO → endpoint validation → `OrderCreated` payload (version-bumped) → consumers. Each increment compiles and is reviewable on its own. |
+| **BUILD** | — | Implement one increment, matching the surrounding code's error model, DI, and logging — house style over personal style. Stay in scope: no drive-by refactors. |
+| **VERIFY** | `/spec:verify` | Walk each acceptance criterion **with evidence**, run the test/lint/type gate (paste the real output — never "tests probably pass"), then take a verifier stance and try to prove it wrong. Re-check the invariants: the `Currency` switch is exhaustive, every `*_id` has an FK, the event version is bumped. |
+| **SYNC** | `/spec:commit` | Update the API contract doc, the event catalog, and the ADR status — a schema change is *migration + docs + version bump, all three or none*. Keep `docs/` free of any link into `.private/`. Refresh the graph, then commit as a Conventional Commit, no AI attribution. |
+
+A change that ships the code but not the docs is **incomplete** — SYNC is part of "done", and
+skipping it silently rots the next agent's context.
 
 ## Supported agents
 
