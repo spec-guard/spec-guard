@@ -27,6 +27,11 @@ mechanics along too.
   **harness-agnostic** IP knowledge base (`.private/`, configurable), and per-agent integration
   (`.claude/`, `.codex/`, `.github/`, `.gemini/`, `.opencode/`). `doctor` lints it; `docs/` may
   never link into internal content.
+- **Conventions, encoded.** On-demand reference docs the agent loads at BUILD/VERIFY — code
+  organization (layering, feature slices, barrels, imports), error model, DB schema & data, coding
+  conventions (naming, typing, DI, SOLID/DRY/KISS/YAGNI), and observability (structured logging,
+  metrics, tracing, mandatory instrumentation) — so "match the surrounding code" has a concrete,
+  source-proven standard behind it, not guesswork. `--scaffold` seeds matching fill-in starter docs.
 - **Multi-git topology intelligence.** Understands a "monorepo" that is actually N deliverable git
   repos plus a private backup monorepo, and reasons about contract ripple and commit order across
   repo boundaries — something single-repo tools can't.
@@ -174,7 +179,7 @@ Run `specguard <command> --help` for per-command usage, subcommands, and flags.
 |------|------------|---------|
 | `--agent <list>` | `init`, `uninstall` | Comma-separated agents, or `all` / `none` (default on a TTY: prompt; else `claude-code`) |
 | `--with-global` / `--no-global` | `init` | Wire (or skip) this machine's hooks without prompting |
-| `--scaffold` | `init` | Also create the `docs/` + `.private/` doc tree (write-if-absent) |
+| `--scaffold` | `init` | Also create the `docs/` + `.private/` doc tree **and seed fill-in starter docs** (architecture, error-handling, schema, observability, coding-guidelines) — all write-if-absent |
 | `--spec-dir` / `--plans-dir` | `init` | Override the spec/plan locations (default `docs/specs`, `docs/plans`) |
 | `--private-dir` | `init`, `migrate` | Override the IP knowledge-base location (default `.private`) |
 | `--scope all` | `init` | Treat the tree as a backup monorepo (record module list for ripple/commit order) |

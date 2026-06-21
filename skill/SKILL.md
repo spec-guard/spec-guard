@@ -47,14 +47,14 @@ Spec-Guard Progress:
 - Identify cross-module ripple up front (see [references/multi-module-consistency.md](references/multi-module-consistency.md)). A contract change is never single-module. In a multi-repo workspace, also read [references/multi-git-topology.md](references/multi-git-topology.md).
 
 ### 4. BUILD — implement within the grain
-- Write code that reads like the code already there: match naming, structure, error handling, DI, test idioms. Consistency beats personal preference.
+- Write code that reads like the code already there — match its structure, error handling, DI, naming, observability, and test idioms. Consistency beats personal preference. The conventions to conform to: [code-organization.md](references/code-organization.md), [error-model.md](references/error-model.md), [schema-and-data.md](references/schema-and-data.md), [coding-conventions.md](references/coding-conventions.md), [observability.md](references/observability.md).
 - Apply existing patterns before inventing abstractions. Reuse shared contracts; never fork an enum/DTO that already exists in a shared module.
 - Stay inside scope. No gold-plating, no drive-by refactors outside the spec (see [references/token-economy.md](references/token-economy.md)).
 
 ### 5. VERIFY — adversarial check against the spec
 - Walk each Acceptance Criterion and confirm the code meets it. Run the repo's test/lint/type gate.
 - For substantial or risky changes, take a **separate verifier stance** (or dispatch a verifier subagent): try to prove the change is wrong, incomplete, or regressive. Default to "not done" until evidence says otherwise.
-- Re-check every invariant in [references/anti-regression.md](references/anti-regression.md).
+- Re-check every invariant in [references/anti-regression.md](references/anti-regression.md), the schema/data rules ([schema-and-data.md](references/schema-and-data.md)) when data shape changed, and confirm the change is instrumented ([observability.md](references/observability.md)) — instrumentation is part of done.
 
 ### 6. SYNC — leave the system consistent
 - Update the docs the change affects: architecture doc, ADR (new or status), API contract, event catalog, glossary. The repo's CLAUDE.md "when to update docs" rule is binding.
@@ -65,6 +65,11 @@ Spec-Guard Progress:
 
 - **The SDD loop, specs, acceptance criteria, traceability** → [references/spec-driven-loop.md](references/spec-driven-loop.md)
 - **Anti-regression invariants (Python + TS + data)** → [references/anti-regression.md](references/anti-regression.md)
+- **Code organization — layering, feature slices, barrels, imports** → [references/code-organization.md](references/code-organization.md)
+- **Error & exception model** → [references/error-model.md](references/error-model.md)
+- **DB schema & data contracts** → [references/schema-and-data.md](references/schema-and-data.md)
+- **Coding conventions — naming, typing, DI, logging** → [references/coding-conventions.md](references/coding-conventions.md)
+- **Observability — logging, metrics, tracing, instrumentation** → [references/observability.md](references/observability.md)
 - **Multi-module consistency & contract ripple** → [references/multi-module-consistency.md](references/multi-module-consistency.md)
 - **Multi-git-repo & backup-monorepo topology** → [references/multi-git-topology.md](references/multi-git-topology.md)
 - **IP vs deliverable docs + the golden rule** → [references/ip-vs-deliverable.md](references/ip-vs-deliverable.md)

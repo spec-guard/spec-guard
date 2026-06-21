@@ -181,6 +181,8 @@ function scaffoldProject(repoRoot, vars) {
     'docs/standards',
     'docs/product',
     'docs/templates',
+    'docs/database',
+    'docs/observability',
     `${vars.privateDir}/docs/troubleshootings`,
     `${vars.privateDir}/docs/action_plans`,
     `${vars.privateDir}/docs/audits`,
@@ -209,6 +211,11 @@ function scaffoldProject(repoRoot, vars) {
   writeIfAbsent('docs/templates/spec-template.md', sub('templates/spec-template.md'));
   writeIfAbsent('docs/templates/plan-template.md', sub('templates/plan-template.md'));
   writeIfAbsent('docs/templates/adr-template.md', sub('templates/adr-template.md'));
+  writeIfAbsent('docs/architecture/code-architecture.md', sub('docs/architecture/code-architecture.md'));
+  writeIfAbsent('docs/standards/error-handling.md', sub('docs/standards/error-handling.md'));
+  writeIfAbsent('docs/standards/coding-guidelines.md', sub('docs/standards/coding-guidelines.md'));
+  writeIfAbsent('docs/database/schema-template.md', sub('docs/database/schema-template.md'));
+  writeIfAbsent('docs/observability/observability.md', sub('docs/observability/observability.md'));
   writeIfAbsent('CLAUDE.md', sub('CLAUDE.md'));
   writeIfAbsent(
     path.join(vars.privateDir, 'README.md'),

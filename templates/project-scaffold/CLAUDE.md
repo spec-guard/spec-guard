@@ -24,6 +24,7 @@ update `/docs/` when architectural decisions change.
 
 - Specs live in `${specDir}`; plans in `${plansDir}`; formal ADRs in `docs/reference/decisions/`.
 - Templates: `docs/templates/{spec,plan,adr}-template.md`.
+- Conventions (fill these in): `docs/architecture/code-architecture.md`, `docs/standards/error-handling.md`, `docs/standards/coding-guidelines.md`, `docs/database/schema-template.md`, `docs/observability/observability.md`.
 
 ## Backup monorepo
 
