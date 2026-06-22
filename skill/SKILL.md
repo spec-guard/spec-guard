@@ -59,6 +59,7 @@ Spec-Guard Progress:
 ### 6. SYNC — leave the system consistent
 - Update the docs the change affects: architecture doc, ADR (new or status), API contract, event catalog, glossary. The repo's CLAUDE.md "when to update docs" rule is binding.
 - Keep deliverable vs IP docs separate and cross-referenced correctly (see [references/ip-vs-deliverable.md](references/ip-vs-deliverable.md)).
+- If a knowledge graph is present, refresh it **before** committing so it rides the same commit — structural every commit, semantic only when that module's docs changed (see [references/graphify-integration.md](references/graphify-integration.md)).
 - A change that ships code but not docs is **incomplete**, and silently rots every future agent's context.
 
 ## Reference material (load on demand)

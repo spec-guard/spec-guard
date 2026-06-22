@@ -146,6 +146,7 @@ do the actual work** (compose with your planning and TDD tools). Note SPEC's com
 4. BUILD     —              implement one increment; match the surrounding code
 5. VERIFY    /spec:verify   check output against the spec + anti-regression invariants; run tests
 6. SYNC      /spec:sync     update docs/contracts/cross-references
+       then  /spec:commit   refresh the knowledge graph (if present), then commit
 ```
 
 `/spec` prints this map and marks where you stand; `/spec:commit` then refreshes the knowledge graph

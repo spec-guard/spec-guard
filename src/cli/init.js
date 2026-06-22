@@ -137,6 +137,11 @@ async function run(args) {
   if (flags.scaffold) {
     const created = installer.scaffoldProject(repoRoot, vars);
     if (created.length) process.stdout.write(`scaffolded ${created.length} doc file(s): ${created.join(', ')}\n`);
+  } else if (settings.backupMonorepo) {
+    // IP firewall (ADR 0009): a backup-monorepo root doesn't gitignore IP, so guard against an
+    // accidental root `graphify extract` indexing it. Write-if-absent; harmless if never used.
+    const gi = installer.scaffoldGraphifyignore(repoRoot, vars);
+    if (gi) process.stdout.write(`wrote ${gi} (IP firewall for the knowledge graph)\n`);
   }
 
   config.writeRepoConfig(repoRoot, settings);

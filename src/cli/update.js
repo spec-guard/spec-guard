@@ -41,6 +41,13 @@ function run(args) {
   const summary = installer.applyAgents(ctx, validated, vars, m, { skipRules, force });
   manifest.save(repoManifestPath, m);
 
+  // IP firewall (ADR 0009): ensure a backup-monorepo root carries a `.graphifyignore` so an
+  // accidental root `graphify extract` can't index IP into the graph. Write-if-absent.
+  if (settings.backupMonorepo) {
+    const gi = installer.scaffoldGraphifyignore(repoRoot, vars);
+    if (gi) process.stdout.write(`wrote ${gi} (IP firewall for the knowledge graph)\n`);
+  }
+
   const counts = {};
   let diverged = 0;
   for (const s of summary) {

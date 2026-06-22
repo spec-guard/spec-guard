@@ -44,6 +44,10 @@ across repo boundaries, not just folder boundaries.
   not "done" until each affected repo is committed, plus the backup root.
 - **SYNC / commit:** commit inside the affected deliverable repo(s) first, then let the backup
   root capture the state. Committing only at the root leaves the deliverable repos stale.
+- **Knowledge graph:** one graph **per module** (`<module>/graphify-out/`, built with the module as
+  cwd so it inherits the module's IP-excluding `.gitignore`), and a root graph that is a **merge**
+  of them — never a single `graphify extract` at the backup root (that would index `${privateDir}/`
+  and agent dirs straight into the graph). See [graphify-integration.md](graphify-integration.md).
 - **IP wall:** the wall (see [ip-vs-deliverable.md](ip-vs-deliverable.md)) is enforced per
   deliverable repo — a `docs/` file in `service-a` must not link into `service-a/${privateDir}/` or
   any of its agent dirs.

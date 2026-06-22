@@ -222,7 +222,22 @@ function scaffoldProject(repoRoot, vars) {
     `# Internal (not shipped)\n\nThe team's intellectual property — harness-agnostic, read by humans and any AI agent:\ntroubleshooting, action plans, audits, internal rationale, internal standards, and credentials.\nAdd \`${vars.privateDir}/\` to every deliverable repo's .gitignore. Deliverable docs (\`docs/\`) must\nnever link in here.\n`
   );
 
+  const gi = scaffoldGraphifyignore(repoRoot, vars);
+  if (gi) created.push(gi);
+
   return created;
+}
+
+// IP firewall (ADR 0009): write a `.graphifyignore` at the repo root so an accidental
+// `graphify extract` here can never index the IP knowledge base or per-agent dirs into the graph.
+// Write-if-absent: never clobbers an existing one. Returns the rel path if created, else null.
+// Most load-bearing at a backup-monorepo root, whose .gitignore does NOT exclude IP.
+function scaffoldGraphifyignore(repoRoot, vars) {
+  const abs = path.join(repoRoot, '.graphifyignore');
+  if (fs.existsSync(abs)) return null;
+  const tpl = path.join(PKG_ROOT, 'templates', 'project-scaffold', '.graphifyignore');
+  fs.writeFileSync(abs, render.substitute(fs.readFileSync(tpl, 'utf8'), vars));
+  return '.graphifyignore';
 }
 
 // Apply the full per-agent repo install for a list of agents. Shared by `init` and `update`.
@@ -252,5 +267,6 @@ module.exports = {
   statuslineCombinedContent,
   installGeminiExtension,
   scaffoldProject,
+  scaffoldGraphifyignore,
   applyAgents,
 };

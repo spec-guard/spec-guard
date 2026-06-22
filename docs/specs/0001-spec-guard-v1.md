@@ -68,7 +68,11 @@ Produces ADRs [0001](../reference/decisions/0001-node-npm-runtime.md),
 [0002](../reference/decisions/0002-spec-dir-convention.md),
 [0003](../reference/decisions/0003-single-source-multi-agent-rendering.md),
 [0004](../reference/decisions/0004-graphify-optional-enhancer.md),
-[0005](../reference/decisions/0005-two-tier-ownership-manifest.md).
+[0005](../reference/decisions/0005-two-tier-ownership-manifest.md),
+[0006](../reference/decisions/0006-harness-agnostic-ip.md),
+[0007](../reference/decisions/0007-binary-name-and-single-front-door.md),
+[0008](../reference/decisions/0008-graph-sync-before-commit.md),
+[0009](../reference/decisions/0009-graph-topology-and-ip-firewall.md).
 
 ## Migrations / Rollout
 

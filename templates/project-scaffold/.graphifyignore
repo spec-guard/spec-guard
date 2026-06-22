@@ -1,0 +1,31 @@
+# spec-guard IP firewall — keep the knowledge graph deliverable-only.
+#
+# The backup-monorepo root versions intellectual property that each deliverable's .gitignore
+# excludes. graphify respects .gitignore, so a per-module build (cwd = module) stays IP-clean
+# automatically — but a stray `graphify extract` AT THIS ROOT would index the IP below straight
+# into the graph. The root graph must instead be a `graphify merge-graphs` of the clean per-module
+# graphs (see docs/reference/decisions/0009-graph-topology-and-ip-firewall.md). This file is
+# defense-in-depth for that rule.
+
+# Internal IP knowledge base
+${privateDir}/
+
+# Per-agent integration / governance dirs (the IP tooling, never shipped)
+.claude/
+.codex/
+.gemini/
+.opencode/
+.superpowers/
+.spec-guard/
+.github/copilot-instructions.md
+.github/prompts/
+.github/skills/
+
+# Secrets / env / local credentials
+.env
+.env.*
+*.local.md
+**/secrets.*
+
+# Database backups / scratch — never architectural signal
+**/db-backups/
