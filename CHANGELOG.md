@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.7](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.6...cli-v0.3.7) (2026-06-22)
+
+
+### Features
+
+* **graphify:** correct sync recipe + per-module topology & IP firewall ([f150470](https://github.com/spec-guard/spec-guard/commit/f1504709833f14a4ceab3cee1ce1e3f1ba8315a5))
+
 ## [0.3.6](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.5...cli-v0.3.6) (2026-06-21)
 
 
