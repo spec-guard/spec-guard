@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.8](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.7...cli-v0.3.8) (2026-06-23)
+
+
+### Features
+
+* add DDD, cache, testing, scale, and ubiquitous-language reference guides ([8ce64d5](https://github.com/spec-guard/spec-guard/commit/8ce64d5de8f035ec51ad6dac09cd6048560cb839))
+
 ## [0.3.7](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.6...cli-v0.3.7) (2026-06-22)
 
 
