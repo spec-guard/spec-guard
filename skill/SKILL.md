@@ -35,7 +35,7 @@ Spec-Guard Progress:
 - Read the repo's root `CLAUDE.md` and any module `CLAUDE.md` for the area you touch. These index the load-bearing invariants and the canonical docs.
 - Open the architecture doc / ADR / spec that governs the surface. If a CLAUDE.md links an ADR index, the matching ADR is **mandatory reading before editing that surface**.
 - Do **not** re-derive behavior from code alone when a doc exists. If code and doc disagree, that is a finding — surface it, don't silently pick one.
-- If the repo carries a knowledge graph (`graphify-out/`), use it to orient before grepping — see [references/graphify-integration.md](references/graphify-integration.md).
+- If the repo carries a knowledge graph (`graphify-out/graph.json`), use it to orient before grepping — see [references/graphify-integration.md](references/graphify-integration.md).
 
 ### 2. SPEC — make the contract explicit
 - For a feature/refactor of any size, there must be a spec before code. Locate an existing one (in `${specDir}`, a plan, or an ADR) or write one using the repo's spec template.
@@ -47,14 +47,14 @@ Spec-Guard Progress:
 - Identify cross-module ripple up front (see [references/multi-module-consistency.md](references/multi-module-consistency.md)). A contract change is never single-module. In a multi-repo workspace, also read [references/multi-git-topology.md](references/multi-git-topology.md).
 
 ### 4. BUILD — implement within the grain
-- Write code that reads like the code already there — match its structure, error handling, DI, naming, observability, and test idioms. Consistency beats personal preference. The conventions to conform to: [code-organization.md](references/code-organization.md), [error-model.md](references/error-model.md), [schema-and-data.md](references/schema-and-data.md), [coding-conventions.md](references/coding-conventions.md), [observability.md](references/observability.md).
+- Write code that reads like the code already there — match its structure, error handling, DI, naming, observability, and test idioms. Consistency beats personal preference. The conventions to conform to: [code-organization.md](references/code-organization.md), [error-model.md](references/error-model.md), [schema-and-data.md](references/schema-and-data.md), [coding-conventions.md](references/coding-conventions.md), [observability.md](references/observability.md), [ddd-patterns.md](references/ddd-patterns.md), [cache-patterns.md](references/cache-patterns.md), [scale-and-performance.md](references/scale-and-performance.md), [testing-patterns.md](references/testing-patterns.md), [ubiquitous-language.md](references/ubiquitous-language.md).
 - Apply existing patterns before inventing abstractions. Reuse shared contracts; never fork an enum/DTO that already exists in a shared module.
 - Stay inside scope. No gold-plating, no drive-by refactors outside the spec (see [references/token-economy.md](references/token-economy.md)).
 
 ### 5. VERIFY — adversarial check against the spec
 - Walk each Acceptance Criterion and confirm the code meets it. Run the repo's test/lint/type gate.
 - For substantial or risky changes, take a **separate verifier stance** (or dispatch a verifier subagent): try to prove the change is wrong, incomplete, or regressive. Default to "not done" until evidence says otherwise.
-- Re-check every invariant in [references/anti-regression.md](references/anti-regression.md), the schema/data rules ([schema-and-data.md](references/schema-and-data.md)) when data shape changed, and confirm the change is instrumented ([observability.md](references/observability.md)) — instrumentation is part of done.
+- Re-check every invariant in [references/anti-regression.md](references/anti-regression.md), the schema/data rules ([references/schema-and-data.md](references/schema-and-data.md)) when data shape changed, and confirm the change is instrumented ([references/observability.md](references/observability.md)) — instrumentation is part of done.
 
 ### 6. SYNC — leave the system consistent
 - Update the docs the change affects: architecture doc, ADR (new or status), API contract, event catalog, glossary. The repo's CLAUDE.md "when to update docs" rule is binding.
@@ -69,8 +69,13 @@ Spec-Guard Progress:
 - **Code organization — layering, feature slices, barrels, imports** → [references/code-organization.md](references/code-organization.md)
 - **Error & exception model** → [references/error-model.md](references/error-model.md)
 - **DB schema & data contracts** → [references/schema-and-data.md](references/schema-and-data.md)
-- **Coding conventions — naming, typing, DI, logging** → [references/coding-conventions.md](references/coding-conventions.md)
-- **Observability — logging, metrics, tracing, instrumentation** → [references/observability.md](references/observability.md)
+- **Coding conventions — naming, typing, DI, entry-points, Null Object** → [references/coding-conventions.md](references/coding-conventions.md)
+- **Observability — logging, metrics, tracing, correlation IDs, instrumented decorator** → [references/observability.md](references/observability.md)
+- **DDD patterns — entities, value objects, aggregates, domain events, repositories, factories** → [references/ddd-patterns.md](references/ddd-patterns.md)
+- **Cache patterns — Cache-Aside, key design, invalidation, warmup, multi-tenant** → [references/cache-patterns.md](references/cache-patterns.md)
+- **Testing patterns — Fake vs Mock, Null Object, test pyramid, domain events, negative assertions** → [references/testing-patterns.md](references/testing-patterns.md)
+- **Scale & performance — async, concurrency, retry, idempotency, pagination, batch, feature flags, multi-tenancy** → [references/scale-and-performance.md](references/scale-and-performance.md)
+- **Ubiquitous language — project glossary, one term one concept, anti-patterns** → [references/ubiquitous-language.md](references/ubiquitous-language.md)
 - **Multi-module consistency & contract ripple** → [references/multi-module-consistency.md](references/multi-module-consistency.md)
 - **Multi-git-repo & backup-monorepo topology** → [references/multi-git-topology.md](references/multi-git-topology.md)
 - **IP vs deliverable docs + the golden rule** → [references/ip-vs-deliverable.md](references/ip-vs-deliverable.md)

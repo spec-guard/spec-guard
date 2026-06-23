@@ -52,3 +52,10 @@ link from internal → deliverable (never the reverse).
 Secrets live only in `${privateDir}/credentials/` (and per-module env under it). Never in `docs/`,
 README, source, or a per-agent integration dir. Modules may symlink to the central files. On
 rotation, update the central file.
+
+## How to verify
+
+- [ ] Does any file under `docs/` contain a hyperlink (not just a prose mention) pointing into `${privateDir}/`, `.claude/`, `.codex/`, `.gemini/`, or any agent dir at any `../` depth?
+- [ ] Are credentials absent from `docs/`, `README`, and source files? (`grep -r "password\|secret\|api_key\|token" docs/ README`)
+- [ ] If a topic was split (concept → `docs/`, recipe → `${privateDir}/`), does the internal doc link forward to the deliverable, and not the reverse?
+- [ ] Does no deliverable doc reference an internal path — even in prose that a reader could follow to reach internal content?

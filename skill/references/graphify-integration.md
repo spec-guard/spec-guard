@@ -82,6 +82,15 @@ The graph carries **deliverable content only** — never `${privateDir}/`, per-a
   drift. Defense-in-depth: a `.graphifyignore` at the backup root listing `${privateDir}/`, agent
   dirs, and `.env*`.
 
+## How to verify
+
+- [ ] Is graphify detected by checking `graphify-out/graph.json` (file, not just the directory)?
+- [ ] Is the root graph produced by `merge-graphs` from per-module outputs — not a direct `graphify extract` at the backup root?
+- [ ] Was `graphify update` (or the skill) run from inside the module dir (`cd <module>` first), not from the workspace root?
+- [ ] Is `--mode deep` absent from the commit loop? (Deep extract is a deliberate per-module enrichment, never part of `specguard commit --graphify`.)
+- [ ] Is `graphify-out/` staged before the commit so the refreshed graph lands in the same commit?
+- [ ] Does the IP firewall hold? (`${privateDir}/`, agent dirs, `.env*` are absent from the graph; confirmed by the per-module build's inherited `.gitignore`.)
+
 ## Fallback (no graphify)
 
 | Want | With graphify | Without |

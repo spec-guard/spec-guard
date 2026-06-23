@@ -9,6 +9,7 @@ In a monorepo of many services sharing contracts, a change is almost never singl
 - Shared modules: don't fork, extend
 - The API-change fan-out
 - Parallelizing safely
+- How to verify
 
 ## The mental model
 
@@ -55,3 +56,12 @@ Shipping the endpoint without 2–6 leaves the contract docs lying — a regress
 - For risky parallel edits, isolate each agent in its own git worktree.
 - Keep one integration point: after parallel work, a single Verifier pass reconciles the contract across modules before commit.
 - When the "monorepo" is actually several deliverable git repos plus a backup monorepo, the ripple crosses repo boundaries — see [multi-git-topology.md](multi-git-topology.md).
+
+## How to verify
+
+- [ ] Was every consumer of the changed enum / event / API / schema / VO enumerated before coding started? (No consumer discovered mid-implementation.)
+- [ ] Did commits happen in dependency order — shared/core first, then consumers, then orchestration? No consumer committed before its dependency.
+- [ ] For an API change: were all 6 fan-out targets updated? (endpoint + internal arch doc + customer docs + API client collection + SDK samples + changelog/error-code reference)
+- [ ] Was a single Verifier pass run after all parallel work to reconcile the contract across modules before commit?
+- [ ] If the change crossed repo boundaries: were all affected deliverable repos updated and committed individually — not lumped into the backup monorepo commit?
+- [ ] Is the contract change recorded in an ADR? Is the ADR cross-linked from every affected module's CLAUDE.md?

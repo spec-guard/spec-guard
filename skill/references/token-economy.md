@@ -8,6 +8,7 @@ The context window is a shared, finite resource. In a large monorepo, sloppy con
 - Delegating to subagents
 - Writing docs & code for future agents
 - Anti-patterns
+- How to verify
 
 ## Principles
 
@@ -45,3 +46,11 @@ The context window is a shared, finite resource. In a large monorepo, sloppy con
 | Wide god-object dependencies | any edit can regress anything | narrow ports |
 | Doing a broad search inline | context bloat | dispatch an explore subagent |
 | Re-deriving an invariant from code each time | wasted tokens, wrong guesses | read the canonical doc/ADR once |
+
+## How to verify
+
+- [ ] Did you read CLAUDE.md first and follow exactly one link deep to the governing doc, rather than opening a broad file tree?
+- [ ] Are wide fan-out searches (audits, multi-file greps) dispatched to subagents so intermediate reads don't fill the main context?
+- [ ] Does each CLAUDE.md serve as an index of load-bearing invariants + links — not a copy of the docs it references?
+- [ ] Is boilerplate (tooling commands, package-manager rules) stated once at root and linked — not duplicated across module files?
+- [ ] Are guidance files free of time-stamped noise like "(NEW 2026-xx)" or "last updated" inline annotations?

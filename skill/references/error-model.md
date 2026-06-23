@@ -9,7 +9,7 @@ style choice.**
 ## Contents
 - The universal rules
 - Organizing the hierarchy
-- Mapping at the boundary
+- Mapping at the boundary (worked example)
 - Workers & messaging
 - Python
 - TypeScript
@@ -73,16 +73,16 @@ shape itself is the repo's to choose; example:
 For event/queue consumers, classify the failure before deciding the ack:
 
 ```
-WorkerError → BusinessError          → ACK   (definitive; don't retry)
-            → InfrastructureError    → NAK   (transient; retry with backoff)
-            → corrupt/undeserializable → TERM (drop; never redeliver)
+BusinessError          → ACK   (definitive; don't retry)
+InfrastructureError    → NAK   (transient; retry with backoff)
+corrupt/undeserializable → TERM (drop; never redeliver)
 ```
 
 Classify first, then ACK/NAK/TERM — never let an unclassified error escape the consumer loop.
 
 ## Python
 
-- Roots as a tiny set: e.g. `DomainError(Exception)` (abstract), `InfraError(Exception)`,
+- Roots as a tiny set: e.g. `DomainError(Exception)` (abstract), `InfrastructureError(Exception)`,
   `IntegrationError(Exception)`. Catch the typed error before any generic `except`.
 - Raise from the use case / entity: `raise OrderNotFoundError(order_id)`; validate invariants in
   `__post_init__`/constructor.
@@ -101,3 +101,4 @@ Classify first, then ACK/NAK/TERM — never let an unclassified error escape the
 - Is it mapped centrally — status/ack added to the one registry — and does the envelope shape match?
 - Did any router raise a transport exception for a business rule?
 - Typed catches before generic; no PII/internal leak in messages.
+- For event/queue consumers: is every error classified before ACK/NAK/TERM? (`BusinessError` → ACK, `InfrastructureError` → NAK, corrupt/undeserializable → TERM.) No unclassified error escapes the consumer loop.

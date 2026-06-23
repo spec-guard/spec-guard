@@ -10,6 +10,7 @@ How to run spec-driven development (SDD) so AI agents produce production code co
 - Working in validated increments
 - The Coordinator / Implementor / Verifier stance
 - Where specs live
+- How to verify
 
 ## Why spec-first
 
@@ -71,3 +72,14 @@ Follow the repo's configured convention:
 - Internal execution heuristics / action plans: the IP docs tree (not deliverable — see [ip-vs-deliverable.md](ip-vs-deliverable.md)).
 
 Use the repo's spec / plan / ADR templates to scaffold. If they don't exist, create them from this structure first.
+
+## How to verify
+
+Use this checklist at the SPEC step — before any code is written:
+
+- [ ] Does the spec have all required sections? (Context/Background, In-Scope, Out-of-Scope, Design/Approach, Acceptance Criteria, Traceability, Migrations/Rollout, Status)
+- [ ] Are acceptance criteria outcome-shaped and independently testable — not implementation steps or internal details?
+- [ ] Does the spec name the ADR(s) it implements, or record that it produces a new ADR? Is that ADR referenced by filename?
+- [ ] For architectural or irreversible changes: has human sign-off been obtained *before* any code was written?
+- [ ] Is the spec stored in the correct location per the repo's convention (`${specDir}`, `${plansDir}`, or `docs/reference/decisions/`)? Not inside `${privateDir}/`.
+- [ ] If a prior spec or ADR is superseded, does the older artifact carry a forward-pointing blockquote, and does the new spec reference the older one?

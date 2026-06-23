@@ -51,3 +51,11 @@ across repo boundaries, not just folder boundaries.
 - **IP wall:** the wall (see [ip-vs-deliverable.md](ip-vs-deliverable.md)) is enforced per
   deliverable repo — a `docs/` file in `service-a` must not link into `service-a/${privateDir}/` or
   any of its agent dirs.
+
+## How to verify
+
+- [ ] Did you commit inside each affected deliverable repo before the backup root? (Never commit only at the root — that leaves deliverable repos stale.)
+- [ ] Does each deliverable repo's `.gitignore` exclude `${privateDir}/`, agent dirs (`.claude/`, `.codex/`, `.gemini/`), `.env*`, and `graphify-out/`?
+- [ ] If a ride-along dir is becoming a deliverable repo, was a complete `.gitignore` added before `git init` + push? (IP must not leak into the first push.)
+- [ ] Is each module's `.git/` directory present and not stuck as `.git_backup` after a backup root commit? (The hook should rename it back automatically; verify if any hook failed.)
+- [ ] For a contract change that crossed repo boundaries: was each affected deliverable repo committed individually in dependency order, not lumped into a single backup-root commit?

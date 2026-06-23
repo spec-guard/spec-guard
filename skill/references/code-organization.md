@@ -38,8 +38,8 @@ consumers import from the folder, not the file. The convention that scales:
 - **Barrels at architectural layers and component categories** — `domain/`, `application/`, `entities/`,
   `repositories/`, `gateways/`, `use_cases/`, an aggregating `exceptions/` folder. These expose a stable
   surface.
-- **No barrel at feature folders or factory subfolders** — `entities/orders/`, `repositories/orders/`,
-  `factories/gateways/`. Consumers import the concrete module (`entities/orders/order.py`), not the
+- **No barrel at feature folders or factory subfolders** — `entities/order/`, `repositories/order/`,
+  `factories/gateways/`. Consumers import the concrete module (`entities/order/order.py`), not the
   feature folder. This keeps a feature free to add files without editing a barrel, and avoids ambiguous
   folder-imports.
 - **Local barrels, not reverse coupling.** Each bounded context exports its own symbols through its
@@ -74,7 +74,7 @@ src/domain/
 ├── __init__.py                 ✓ layer barrel
 ├── entities/
 │   ├── __init__.py             ✓ category barrel
-│   └── orders/                 (feature — NO __init__.py)
+│   └── order/                  (feature — NO __init__.py)
 │       ├── order.py
 │       └── exceptions/
 │           └── __init__.py     ✓ aggregates the feature's exceptions
@@ -82,12 +82,12 @@ src/domain/
     ├── __init__.py             ✓ category barrel
     └── order_repository.py     (interface)
 src/infrastructure/db/repositories/
-└── orders/                     (feature — NO __init__.py)
+└── order/                      (feature — NO __init__.py)
     └── postgres_order_repository.py
 ```
 
-Import the concrete module: `from domain.entities.orders.order import Order` — not
-`from domain.entities.orders import Order`.
+Import the concrete module: `from domain.entities.order.order import Order` — not
+`from domain.entities.order import Order`.
 
 ## TypeScript
 
@@ -102,7 +102,7 @@ Import the concrete module: `from domain.entities.orders.order import Order` —
 - A layer barrel re-exports named symbols and marks type-only re-exports with `export type`:
   ```ts
   // src/domain/index.ts
-  export { Order } from "./entities/orders/order";
+  export { Order } from "./entities/order/order";
   export type { OrderRepository } from "./repositories/order-repository";
   export { DomainError, NotFoundError } from "./entities/exceptions";
   ```
