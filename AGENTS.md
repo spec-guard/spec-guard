@@ -14,7 +14,7 @@ rendered per agent.
 ## Architecture (where things live)
 
 - `bin/spec-guard.js` — thin entrypoint → `src/cli/index.js` dispatcher.
-- `src/cli/*` — commands: `init`, `update`, `self`, `status`, `doctor`, `toggle`, `install`.
+- `src/cli/*` — commands: `init`, `self`, `status`, `doctor`, `toggle`, `setup`, `uninstall`, `commit`, `migrate`, `completion`.
 - `src/core/*` — `config` (XDG + repo-local), `agents` (per-agent path matrix),
   `render` (single-source → per-agent), `topology` (repo-kind detection),
   `lint` (IP/deliverable wall), `manifest` (owned-file guard), `graphify` (optional enhancer).

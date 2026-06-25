@@ -40,57 +40,90 @@ const FALLBACK =
   'BUILD -> VERIFY -> SYNC. Trivial edits skip the loop but still obey anti-regression invariants.';
 
 const GLOBAL_SKILL_DIR = path.resolve(__dirname, '..', '..', 'skills', 'spec-guard');
-const REPO_SKILL_REL = '.claude/skills/spec-guard';
+
+// Duplicates the path matrix from agents.js — activate.js is deployed standalone without it.
+// Only repo-scoped agents are included; codex is home-scoped (~/.codex/) and must not be
+// auto-updated from a repo SessionStart hook (it would write to the wrong location).
+const AGENT_SKILL_DIRS = {
+  'claude-code':    '.claude/skills/spec-guard',
+  'opencode':       '.opencode/skill/spec-guard',
+  'github-copilot': '.github/skills/spec-guard',
+  'gemini':         '.gemini/extensions/spec-guard/skills/spec-guard',
+};
 
 function hashContent(content) {
   return crypto.createHash('sha256').update(String(content), 'utf8').digest('hex');
 }
 
-function tryAutoUpdate(repoRoot) {
+// Extract agent IDs installed in this repo from manifest key pattern "repo:<id>:skill:*".
+function installedAgentsFromManifest(m) {
+  const ids = new Set();
+  for (const key of Object.keys(m.files || {})) {
+    const match = /^repo:([^:]+):skill:/.exec(key);
+    if (match) ids.add(match[1]);
+  }
+  return ids.size > 0 ? Array.from(ids) : ['claude-code'];
+}
+
+function tryAutoUpdate(repoRoot, globalSkillDirOverride) {
+  const globalSkillDir = globalSkillDirOverride || GLOBAL_SKILL_DIR;
   const manifestPath = path.join(repoRoot, '.spec-guard', 'manifest.json');
   let m;
   try { m = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); }
   catch (e) { return null; }
 
   let refs = [];
-  try { refs = fs.readdirSync(path.join(GLOBAL_SKILL_DIR, 'references')).map(f => 'references/' + f); }
-  catch (e) { return null; }
+  try { refs = fs.readdirSync(path.join(globalSkillDir, 'references')).map(f => 'references/' + f); }
+  catch (e) { /* no references dir — update SKILL.md only */ }
   const allFiles = ['SKILL.md', ...refs];
 
+  const agentIds = installedAgentsFromManifest(m);
+
   let updated = 0, protectedCount = 0;
-  for (const rel of allFiles) {
-    const key = 'repo:claude-code:skill:' + rel;
-    const globalPath = path.join(GLOBAL_SKILL_DIR, rel);
-    const repoPath = path.join(repoRoot, REPO_SKILL_REL, rel);
+  for (const agentId of agentIds) {
+    const skillRelDir = AGENT_SKILL_DIRS[agentId];
+    if (!skillRelDir) continue; // home-scoped or unknown agent
+    for (const rel of allFiles) {
+      const key = `repo:${agentId}:skill:${rel}`;
+      const globalPath = path.join(globalSkillDir, rel);
+      const repoPath = path.join(repoRoot, skillRelDir, rel);
 
-    let newContent;
-    try { newContent = fs.readFileSync(globalPath, 'utf8'); }
-    catch (e) { continue; }
+      let newContent;
+      try { newContent = fs.readFileSync(globalPath, 'utf8'); }
+      catch (e) { continue; }
 
-    const newHash = hashContent(newContent);
-    const recorded = m.files[key] && m.files[key].hash;
+      const newHash = hashContent(newContent);
+      const recorded = m.files[key] && m.files[key].hash;
 
-    let currentContent = null;
-    try { currentContent = fs.readFileSync(repoPath, 'utf8'); } catch (e) {}
+      let currentContent = null;
+      try { currentContent = fs.readFileSync(repoPath, 'utf8'); } catch (e) {}
 
-    // User-edited: current hash differs from recorded → protect
-    if (currentContent !== null && recorded && hashContent(currentContent) !== recorded) {
-      protectedCount++;
-      continue;
+      // User-edited: current hash differs from recorded → protect
+      if (currentContent !== null && recorded && hashContent(currentContent) !== recorded) {
+        protectedCount++;
+        continue;
+      }
+
+      // Already current
+      if (currentContent !== null && hashContent(currentContent) === newHash) continue;
+
+      // Never create a skill tree that was not installed — only refresh managed files.
+      if (!recorded && currentContent === null) continue;
+
+      fs.mkdirSync(path.dirname(repoPath), { recursive: true });
+      fs.writeFileSync(repoPath, newContent);
+      m.files[key] = { hash: newHash };
+      updated++;
     }
-
-    // Already current
-    if (currentContent !== null && hashContent(currentContent) === newHash) continue;
-
-    // Update
-    fs.mkdirSync(path.dirname(repoPath), { recursive: true });
-    fs.writeFileSync(repoPath, newContent);
-    m.files[key] = { hash: newHash };
-    updated++;
   }
 
   if (updated > 0) {
-    fs.writeFileSync(manifestPath, JSON.stringify(m, null, 2) + '\n');
+    try {
+      fs.writeFileSync(manifestPath, JSON.stringify(m, null, 2) + '\n');
+    } catch (e) {
+      process.stderr.write(`spec-guard: failed to persist manifest after auto-update: ${e.message}\n`);
+      return null;
+    }
   }
 
   return { updated, protectedCount };
@@ -98,6 +131,7 @@ function tryAutoUpdate(repoRoot) {
 
 const REPO_SKILL_LOCATIONS = [
   '.claude/skills/spec-guard/SKILL.md',
+  '.opencode/skill/spec-guard/SKILL.md',
   '.github/skills/spec-guard/SKILL.md',
   '.gemini/extensions/spec-guard/skills/spec-guard/SKILL.md',
 ];
@@ -166,7 +200,7 @@ function main() {
     const result = tryAutoUpdate(repoRoot);
     if (result && result.updated > 0) {
       if (result.protectedCount > 0) {
-        autoUpdateNote = `Skill auto-updated (${result.updated} file${result.updated !== 1 ? 's' : ''} refreshed, ${result.protectedCount} user-edited file${result.protectedCount !== 1 ? 's' : ''} protected — review .spec-guard-update sidecars).\n\n`;
+        autoUpdateNote = `Skill auto-updated (${result.updated} file${result.updated !== 1 ? 's' : ''} refreshed, ${result.protectedCount} user-edited file${result.protectedCount !== 1 ? 's' : ''} protected — manual review required).\n\n`;
       } else {
         autoUpdateNote = `Skill auto-updated (${result.updated} file${result.updated !== 1 ? 's' : ''} refreshed).\n\n`;
       }
@@ -184,4 +218,4 @@ function main() {
   process.stdout.write(autoUpdateNote + PREAMBLE + body);
 }
 
-main();
+if (require.main === module) main();

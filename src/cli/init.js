@@ -58,7 +58,7 @@ function reportDiverged(summary) {
     process.stdout.write(
       '\n  These are spec-guard-owned files — a difference is usually an older install or a stray edit,\n' +
         '  not something you authored. To take the new version, replace each file with its\n' +
-        '  `.spec-guard-update` sidecar, or just re-render cleanly with `specguard update --force`\n' +
+        '  `.spec-guard-update` sidecar, or just re-render cleanly with `specguard init --force`\n' +
         '  (then delete any leftover `.spec-guard-update` files).\n'
     );
   }

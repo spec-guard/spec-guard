@@ -254,8 +254,11 @@ Co-tenant hooks (e.g. other tools wired into the same `settings.json`) are match
 
 - **Manifest-guarded writes.** Each installed file is recorded with a content hash in
   `.spec-guard/manifest.json` (per repo) or `~/.config/spec-guard/manifest.json` (global). On
-  `self upgrade` or a session-start auto-update, an unchanged file is refreshed, but a file you
-  edited is left in place and the new version is written next to it as `<file>.spec-guard-update`.
+  `init` (without `--force`), an unchanged file is left as-is; a file you edited is left in place
+  and the new version is written next to it as `<file>.spec-guard-update`. On `init --force`,
+  edited files are overwritten directly (no sidecar). `self upgrade` refreshes only machine-level
+  hooks; per-repo skill files are updated by session-start auto-update, which skips user-edited
+  files silently with a count in the session note but does not write a sidecar.
 - **Block-scoped rules.** In rules files spec-guard owns only the delimited block; your prose is
   never read into the hash or overwritten.
 - **Reversible.** `uninstall` mirrors install through the same path matrix, so it removes exactly

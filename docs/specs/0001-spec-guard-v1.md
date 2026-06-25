@@ -14,23 +14,22 @@ without losing the governance.
 
 ## In-Scope
 
-- A Node/npm CLI `@spec-guard/cli` with `init`, `update`, `self`, `status`, `doctor`,
-  `toggle`, `install --global`, `uninstall` (per-repo + `--global`/`--purge`), `commit`,
-  and `migrate`.
+- A Node/npm CLI `@spec-guard/cli` with `init`, `setup`, `self`, `status`, `doctor`,
+  `toggle`, `on`, `off`, `uninstall` (per-repo + `--global`/`--purge`), `commit`, `migrate`, and `completion`.
 - Single-source skill + command set, **rendered per agent** for Claude Code, Codex,
-  GitHub Copilot, and Gemini CLI (skill, slash commands, lifecycle hooks, and a managed
-  rules-file block per agent).
+  GitHub Copilot, Gemini CLI, and opencode (skill, slash commands, lifecycle hooks, and a
+  managed rules-file block per agent).
 - Decoupling from the `superpowers` folder convention via a configurable `${specDir}` /
   `${plansDir}` (default `docs/specs` / `docs/plans`).
-- Two-axis self-update (`self upgrade` for the binary, `update` for scaffolded files) with
-  a manifest hash-guard that never clobbers user-edited files.
+- Self-update (`self upgrade` for the binary; per-repo skill auto-updates at SessionStart)
+  with a manifest hash-guard that never clobbers user-edited files.
 - Differentiators: multi-git topology detection, IP/deliverable wall linting, an optional
   graphify enhancer (graceful fallback), and greenfield project scaffolding.
 - Turbo Notify as the pilot consumer.
 
 ## Out-of-Scope (v1)
 
-- Agents beyond the four named (others are added later as path-matrix rows).
+- Agents beyond the five named (others are added later as path-matrix rows).
 - A separate `constitution.md` (the existing `CLAUDE.md` + ADRs + references are the
   constitution; we augment, not fork).
 - A hosted service / marketplace.
@@ -48,19 +47,19 @@ of the nested-git-backup pattern. Full design: the approved plan and the ADRs be
 
 ## Acceptance Criteria
 
-1. `npx @spec-guard/cli init <dir> --agent claude-code,codex,github-copilot,gemini` produces
-   the per-agent skill/commands/rules-block at the matrix paths, and `spec-guard --version`
+1. `npx @spec-guard/cli init <dir> --agent claude-code,codex,github-copilot,gemini,opencode`
+   produces the per-agent skill/commands/rules-block at the matrix paths, and `specguard --version`
    runs.
 2. `npm pack --dry-run` never includes `.claude/` (no IP leak in the tarball).
 3. The rendered skill contains no hardcoded `superpowers` path and no `superpowers:` strings;
    the configured `${specDir}` appears instead.
-4. `install --global` over a settings file that already has co-tenant hooks leaves them
+4. `setup` over a settings file that already has co-tenant hooks leaves them
    byte-identical and produces exactly one spec-guard entry per lifecycle event (no
    double-injection).
 5. `doctor` reports repo topology and flags only real `.claude/` hyperlinks under `docs/`
    (prose mentions are not violations).
-6. `update` never overwrites a user-edited owned file (writes a `.spec-guard-update` sidecar)
-   and never touches `docs/specs` / `docs/plans`.
+6. Re-rendering (`specguard init --force`) never overwrites a user-edited owned file (writes
+   a `.spec-guard-update` sidecar) and never touches `docs/specs` / `docs/plans`.
 
 ## Traceability
 
