@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.9](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.8...cli-v0.3.9) (2026-06-25)
+
+
+### Features
+
+* auto-update per-repo skill at SessionStart, remove specguard update command ([2389ece](https://github.com/spec-guard/spec-guard/commit/2389eced1a0ddae837989cc39f111750c9e9f35d))
+
 ## [0.3.8](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.7...cli-v0.3.8) (2026-06-23)
 
 
