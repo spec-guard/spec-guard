@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.10](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.9...cli-v0.3.10) (2026-06-25)
+
+
+### Bug Fixes
+
+* make tryAutoUpdate agent-aware and scope-safe ([08ed349](https://github.com/spec-guard/spec-guard/commit/08ed3495f34d2c06041393a41379471b8c2dc255))
+
 ## [0.3.9](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.8...cli-v0.3.9) (2026-06-25)
 
 
