@@ -160,9 +160,6 @@ async function run(args) {
   }
   process.stdout.write(`  spec dir: ${specDir}   plans dir: ${plansDir}\n`);
   process.stdout.write(`  agents: ${agentList.join(', ') || '(none)'}${skipRules ? '  (self-dogfood: rules-block skipped)' : ''}\n`);
-  if (alreadyInit) {
-    process.stdout.write("  (tip: `specguard update` is the lighter re-render for routine upgrades)\n");
-  }
 
   await maybeWireMachine(flags, home, agentList);
 

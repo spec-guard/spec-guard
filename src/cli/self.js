@@ -86,7 +86,7 @@ function upgrade(flags) {
       process.stdout.write("  machine hooks aren't wired here — would suggest 'specguard setup' (left as-is otherwise).\n");
     }
     if (willUpgrade) {
-      process.stdout.write("  would then suggest running 'specguard update' in your repos.\n");
+      process.stdout.write("  spec-guard will auto-update on next session start in your repos.\n");
     }
     const gh = deps.ghReleases();
     if (gh && gh.status === 0 && gh.stdout && gh.stdout.trim()) process.stdout.write('recent releases:\n' + gh.stdout);
@@ -152,7 +152,7 @@ function upgrade(flags) {
     if (!machineWired) {
       process.stdout.write("  (machine hooks not wired here — run 'specguard setup' to add session hooks + statusline.)\n");
     }
-    process.stdout.write("  next: run 'specguard update' in your repos to re-render their spec-guard files.\n");
+    process.stdout.write("  spec-guard will auto-update on next session start in each repo.\n");
   } else {
     process.stdout.write(`specguard: reinstalled ${newVersion}${refreshed ? ' (machine hooks refreshed)' : ''}\n`);
   }

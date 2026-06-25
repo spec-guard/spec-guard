@@ -39,7 +39,7 @@ mechanics along too.
   Adding an agent is a row, not a fork.
 - **Commit, governed.** `specguard commit` produces a Conventional Commit (no AI attribution),
   single repo or `--all` across the backup monorepo in dependency order.
-- **Reversible by design.** Every file it writes is tracked in a manifest; `update` never clobbers
+- **Reversible by design.** Every file it writes is tracked in a manifest; auto-updates never clobber
   your edits, and `uninstall` removes exactly what it added (and nothing of yours).
 - **Optional graphify enhancer.** When a `graphify-out/` knowledge graph exists, ORIENT/VERIFY use
   it; otherwise it falls back to grep/read. Never required.
@@ -187,13 +187,12 @@ skipping it silently rots the next agent's context.
 | Command | Purpose |
 |---------|---------|
 | `init [path] [--agent all\|none\|…] [--with-global\|--no-global] [--scaffold] [--spec-dir …] [--plans-dir …] [--private-dir …] [--scope all]` | Install into a repo (per-agent skill, commands, hooks, rules-block); prompts on a TTY |
-| `update [path]` | Re-render owned files idempotently (manifest-guarded; never clobbers your edits) |
 | `setup` | Wire this machine's Claude Code / Codex session hooks + statusline |
 | `uninstall [path] [--global] [--purge] [--dry-run]` | Remove spec-guard from a repo, or from this machine |
 | `doctor [path]` | Diagnose install health, repo topology, the IP/deliverable wall, and unfilled convention-doc placeholders |
 | `commit [--all] [--scope …] [--graphify] -m …` | Commit a message **you** author (validated as Conventional, AI attribution stripped), single repo or across the backup monorepo; `--graphify` refreshes the knowledge graph first |
 | `migrate [--apply]` | Transitional: upgrade an old-model repo to the current layout |
-| `self check\|upgrade\|rollback [--dry-run] [--tag …] [--force]` | Update the CLI itself. `upgrade` is idempotent (skips when already on the latest; `--force` reinstalls); a real upgrade also refreshes this machine's hooks (only if already wired) and reminds you to `update` your repos |
+| `self check\|upgrade\|rollback [--dry-run] [--tag …] [--force]` | Update the CLI itself. `upgrade` is idempotent (skips when already on the latest; `--force` reinstalls); a real upgrade also refreshes this machine's hooks (only if already wired); per-repo skill files auto-update on the next session start |
 | `completion <bash\|zsh\|fish\|powershell>` | Print a shell-completion script (auto-detects the shell if omitted) |
 | `status` · `toggle on\|off` (aliases `on`/`off`) | Show state · governance switch |
 
@@ -215,7 +214,7 @@ Run `specguard <command> --help` for per-command usage, subcommands, and flags.
 | `--global` | `uninstall` | Operate on the machine, not a repo |
 | `--purge` | `uninstall --global` | Also forget preferences (XDG config + the on/off flag) |
 | `--dry-run` | `uninstall` | Print the plan and change nothing |
-| `--force` | `init`, `update`, `setup` | Overwrite even user-edited owned files (skips the sidecar guard) |
+| `--force` | `init`, `setup` | Overwrite even user-edited owned files (skips the sidecar guard) |
 | `--apply` | `migrate` | Apply the migration (otherwise dry-run) |
 
 ## Uninstall
@@ -255,8 +254,8 @@ Co-tenant hooks (e.g. other tools wired into the same `settings.json`) are match
 
 - **Manifest-guarded writes.** Each installed file is recorded with a content hash in
   `.spec-guard/manifest.json` (per repo) or `~/.config/spec-guard/manifest.json` (global). On
-  `update`/`self upgrade`, an unchanged file is refreshed, but a file you edited is left in place
-  and the new version is written next to it as `<file>.spec-guard-update`.
+  `self upgrade` or a session-start auto-update, an unchanged file is refreshed, but a file you
+  edited is left in place and the new version is written next to it as `<file>.spec-guard-update`.
 - **Block-scoped rules.** In rules files spec-guard owns only the delimited block; your prose is
   never read into the hash or overwritten.
 - **Reversible.** `uninstall` mirrors install through the same path matrix, so it removes exactly
@@ -277,7 +276,7 @@ Co-tenant hooks (e.g. other tools wired into the same `settings.json`) are match
 ```
 
 You normally don't edit this by hand — `init` writes it from your flags. If you do change a value,
-re-run `specguard update` to re-render the owned files against it.
+re-run `specguard init` to re-render the owned files against it.
 
 ## Migrating an existing repo
 

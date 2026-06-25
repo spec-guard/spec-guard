@@ -100,14 +100,14 @@ test('self upgrade --force reinstalls the same version (and refreshes a wired ma
   assert.strictEqual(calls.refresh, 1, '--force should refresh the machine when it is wired');
 });
 
-test('self upgrade to a newer version installs, refreshes a wired machine, and nudges to update repos', () => {
+test('self upgrade to a newer version installs, refreshes a wired machine, and nudges to auto-update repos', () => {
   seedMachineWired();
   const calls = stub({ view: '9.9.9', installed: '9.9.9' });
   const { out, code } = capture(() => self.run(['upgrade']));
   assert.strictEqual(code, 0);
   assert.match(out, /upgraded to 9\.9\.9/);
   assert.match(out, /machine hooks refreshed/);
-  assert.match(out, /specguard update/);
+  assert.match(out, /auto-update/);
   assert.strictEqual(calls.install, 1);
   assert.strictEqual(calls.refresh, 1);
 });
@@ -120,7 +120,7 @@ test('self upgrade does NOT wire a machine that was never set up (CLI-only / --n
   assert.match(out, /upgraded to 9\.9\.9/);
   assert.doesNotMatch(out, /machine hooks refreshed/);
   assert.match(out, /run 'specguard setup'/);
-  assert.match(out, /specguard update/);
+  assert.match(out, /auto-update/);
   assert.strictEqual(calls.install, 1);
   assert.strictEqual(calls.refresh, 0, 'must not silently create machine config the user opted out of');
 });
@@ -139,7 +139,7 @@ test('self upgrade --dry-run preview matches the real path (wired machine)', () 
   assert.strictEqual(code, 0);
   assert.match(out, /would upgrade .* -> 9\.9\.9/);
   assert.match(out, /would also refresh this machine's wired hooks/);
-  assert.match(out, /would then suggest running 'specguard update'/);
+  assert.match(out, /auto-update/);
   assert.strictEqual(calls.install, 0, 'dry-run must not install');
 });
 

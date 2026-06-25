@@ -11,12 +11,11 @@
 const SHELLS = ['bash', 'zsh', 'fish', 'powershell'];
 
 // Top-level commands (keep in sync with src/cli/index.js COMMANDS).
-const COMMANDS = ['init', 'update', 'setup', 'uninstall', 'doctor', 'commit', 'migrate', 'self', 'status', 'on', 'off', 'toggle', 'completion', 'help'];
+const COMMANDS = ['init', 'setup', 'uninstall', 'doctor', 'commit', 'migrate', 'self', 'status', 'on', 'off', 'toggle', 'completion', 'help'];
 
 // Per-command option flags.
 const FLAGS = {
   init: ['--agent', '--with-global', '--no-global', '--scaffold', '--spec-dir', '--plans-dir', '--private-dir', '--scope', '--force'],
-  update: ['--force'],
   setup: ['--force'],
   uninstall: ['--agent', '--global', '--purge', '--dry-run'],
   doctor: ['--quiet'],

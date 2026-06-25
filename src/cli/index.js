@@ -25,11 +25,6 @@ const COMMANDS = {
       '--force            re-render even user-diverged files',
     ],
   },
-  update: {
-    summary: 'Re-render owned files idempotently (manifest-guarded; never touches user specs).',
-    usage: 'specguard update [path] [--force]',
-    flags: ['--force            re-render even user-diverged files'],
-  },
   self: {
     summary: 'Update the CLI itself: self check | upgrade | rollback.',
     usage: 'specguard self check|upgrade|rollback [--dry-run] [--tag vX.Y.Z] [--force]',

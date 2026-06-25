@@ -22,6 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
 const { getDefaultMode, safeWriteFlag, removeFlag, getFlagPath } = require('./config');
 
 const PREAMBLE =
@@ -37,6 +38,63 @@ const FALLBACK =
   'For any non-trivial change (feature, refactor touching >1 file, schema/API/contract/event change, ' +
   'bugfix in load-bearing code): ORIENT (read repo CLAUDE.md + governing doc/ADR) -> SPEC -> PLAN -> ' +
   'BUILD -> VERIFY -> SYNC. Trivial edits skip the loop but still obey anti-regression invariants.';
+
+const GLOBAL_SKILL_DIR = path.resolve(__dirname, '..', '..', 'skills', 'spec-guard');
+const REPO_SKILL_REL = '.claude/skills/spec-guard';
+
+function hashContent(content) {
+  return crypto.createHash('sha256').update(String(content), 'utf8').digest('hex');
+}
+
+function tryAutoUpdate(repoRoot) {
+  const manifestPath = path.join(repoRoot, '.spec-guard', 'manifest.json');
+  let m;
+  try { m = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); }
+  catch (e) { return null; }
+
+  let refs = [];
+  try { refs = fs.readdirSync(path.join(GLOBAL_SKILL_DIR, 'references')).map(f => 'references/' + f); }
+  catch (e) { return null; }
+  const allFiles = ['SKILL.md', ...refs];
+
+  let updated = 0, protectedCount = 0;
+  for (const rel of allFiles) {
+    const key = 'repo:claude-code:skill:' + rel;
+    const globalPath = path.join(GLOBAL_SKILL_DIR, rel);
+    const repoPath = path.join(repoRoot, REPO_SKILL_REL, rel);
+
+    let newContent;
+    try { newContent = fs.readFileSync(globalPath, 'utf8'); }
+    catch (e) { continue; }
+
+    const newHash = hashContent(newContent);
+    const recorded = m.files[key] && m.files[key].hash;
+
+    let currentContent = null;
+    try { currentContent = fs.readFileSync(repoPath, 'utf8'); } catch (e) {}
+
+    // User-edited: current hash differs from recorded → protect
+    if (currentContent !== null && recorded && hashContent(currentContent) !== recorded) {
+      protectedCount++;
+      continue;
+    }
+
+    // Already current
+    if (currentContent !== null && hashContent(currentContent) === newHash) continue;
+
+    // Update
+    fs.mkdirSync(path.dirname(repoPath), { recursive: true });
+    fs.writeFileSync(repoPath, newContent);
+    m.files[key] = { hash: newHash };
+    updated++;
+  }
+
+  if (updated > 0) {
+    fs.writeFileSync(manifestPath, JSON.stringify(m, null, 2) + '\n');
+  }
+
+  return { updated, protectedCount };
+}
 
 const REPO_SKILL_LOCATIONS = [
   '.claude/skills/spec-guard/SKILL.md',
@@ -60,9 +118,8 @@ function findRepoRoot(startDir) {
 }
 
 // Returns { content, warn } — content is null if no skill file was found.
-function resolveSkill() {
+function resolveSkill(repoRoot) {
   // a. Per-repo
-  const repoRoot = findRepoRoot(process.env.CLAUDE_CWD || process.cwd());
   if (repoRoot) {
     for (const rel of REPO_SKILL_LOCATIONS) {
       const p = path.join(repoRoot, rel);
@@ -72,23 +129,21 @@ function resolveSkill() {
         // try next location
       }
     }
-    // Config found but no rendered skill -> warn, fall through to global.
-    var warn = `SPEC-GUARD: per-repo skill not rendered in ${repoRoot} — run 'specguard update' there.\n`;
   }
 
   // b. Sibling global (next to this hook bundle: <agentRoot>/hooks/spec-guard/ -> ../../skills/...)
   const sibling = path.resolve(__dirname, '..', '..', 'skills', 'spec-guard', 'SKILL.md');
   try {
-    return { content: fs.readFileSync(sibling, 'utf8'), warn: warn || null };
+    return { content: fs.readFileSync(sibling, 'utf8'), warn: null };
   } catch (e) {
     // c. CLAUDE_CONFIG_DIR global
   }
 
   const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
   try {
-    return { content: fs.readFileSync(path.join(claudeDir, 'skills', 'spec-guard', 'SKILL.md'), 'utf8'), warn: warn || null };
+    return { content: fs.readFileSync(path.join(claudeDir, 'skills', 'spec-guard', 'SKILL.md'), 'utf8'), warn: null };
   } catch (e) {
-    return { content: null, warn: warn || null };
+    return { content: null, warn: null };
   }
 }
 
@@ -104,15 +159,29 @@ function main() {
 
   safeWriteFlag(flagPath, 'on');
 
-  const { content, warn } = resolveSkill();
+  const repoRoot = findRepoRoot(process.env.CLAUDE_CWD || process.cwd());
+
+  let autoUpdateNote = '';
+  if (repoRoot) {
+    const result = tryAutoUpdate(repoRoot);
+    if (result && result.updated > 0) {
+      if (result.protectedCount > 0) {
+        autoUpdateNote = `Skill auto-updated (${result.updated} file${result.updated !== 1 ? 's' : ''} refreshed, ${result.protectedCount} user-edited file${result.protectedCount !== 1 ? 's' : ''} protected — review .spec-guard-update sidecars).\n\n`;
+      } else {
+        autoUpdateNote = `Skill auto-updated (${result.updated} file${result.updated !== 1 ? 's' : ''} refreshed).\n\n`;
+      }
+    }
+  }
+
+  const { content, warn } = resolveSkill(repoRoot);
   if (warn) process.stderr.write(warn);
 
   if (!content) {
-    process.stdout.write(FALLBACK);
+    process.stdout.write(autoUpdateNote + FALLBACK);
     return;
   }
   const body = content.replace(/^---[\s\S]*?---\s*/, '');
-  process.stdout.write(PREAMBLE + body);
+  process.stdout.write(autoUpdateNote + PREAMBLE + body);
 }
 
 main();

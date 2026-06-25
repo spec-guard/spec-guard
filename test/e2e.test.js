@@ -335,19 +335,7 @@ test('uninstall --global unwires hooks and preserves co-tenant entries', () => {
   }
 });
 
-test('update protects a user-edited owned file with a sidecar', () => {
-  const { home, repo, cleanup } = sandbox();
-  try {
-    sg(home, ['init', repo, '--agent', 'claude-code', '--spec-dir', 'docs/specs']);
-    const skillFile = path.join(repo, '.claude/skills/spec-guard/SKILL.md');
-    fs.writeFileSync(skillFile, 'I hand-edited this skill\n');
-    sg(home, ['update', repo]);
-    assert.strictEqual(fs.readFileSync(skillFile, 'utf8'), 'I hand-edited this skill\n', 'original preserved');
-    assert.ok(fs.existsSync(skillFile + '.spec-guard-update'), 'sidecar written');
-  } finally {
-    cleanup();
-  }
-});
+// removed: update command is no longer user-facing (auto-update on session start)
 
 test('init is honest on re-run: re-rendered, not "installed into"', () => {
   const { home, repo, cleanup } = sandbox();
@@ -364,20 +352,7 @@ test('init is honest on re-run: re-rendered, not "installed into"', () => {
   }
 });
 
-test('update with nothing to change says "already up to date"', () => {
-  const { home, repo, cleanup } = sandbox();
-  try {
-    // Include gemini: its hooks.json write must also be idempotent (a literal "wired" verb would
-    // mask a no-op re-run and wrongly print "update complete").
-    sg(home, ['init', repo, '--agent', 'claude-code,gemini']);
-    // init just wrote every owned file, so an immediate update changes nothing.
-    const out = sg(home, ['update', repo]);
-    assert.match(out, /already up to date — nothing to re-render/);
-    assert.doesNotMatch(out, /update complete/);
-  } finally {
-    cleanup();
-  }
-});
+// removed: update command is no longer user-facing (auto-update on session start)
 
 test('setup is honest on re-run: "machine already set up (nothing changed)"', () => {
   const { home, cleanup } = sandbox();
