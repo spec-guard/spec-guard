@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.11](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.10...cli-v0.3.11) (2026-06-30)
+
+
+### Bug Fixes
+
+* github-copilot overlay missing spec-commit and umbrella commands ([be9290f](https://github.com/spec-guard/spec-guard/commit/be9290f3ca616c3d98d71028b62d7b807093c05a))
+
 ## [0.3.10](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.9...cli-v0.3.10) (2026-06-25)
 
 
