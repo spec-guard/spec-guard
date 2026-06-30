@@ -88,14 +88,18 @@ specguard setup                                                       # (re)wire
 1. **Install + initialize** (above): `specguard init .`. On a TTY it asks which agents to set up and
    offers to wire this machine's hooks right there — so that's usually all you run. (In CI, add
    `--with-global`, or run `specguard setup` separately.)
-2. **Open your agent and just work.** spec-guard is active every session — no command needed. In
-   Claude Code you'll see a `[SPEC-GUARD]` badge, and the loop is injected automatically, so the
-   agent reads your governing docs/ADRs *before* writing code and verifies against the spec after.
-3. **Drive the phases explicitly when you want** (Claude Code / Gemini slash commands; other agents
-   use natural language — "orient on X", "write the spec", "commit this"):
+2. **Open your agent and just work.** spec-guard is active every session — no command needed:
+   - **Claude Code**: SessionStart hook activates the skill; `[SPEC-GUARD]` badge in the statusline; `specguard off` to pause.
+   - **Codex**: SessionStart hook activates the skill; no badge; same governance applies.
+   - **GitHub Copilot**: No lifecycle hook — governance rides `.github/copilot-instructions.md` (always-on project memory).
+   - **Gemini CLI**: The `spec-guard` extension activates automatically via its session hooks.
+   - **opencode (+ OpenWork)**: No lifecycle hook — governance rides `AGENTS.md` (always-on project memory).
 
-   | Command | When |
-   |---------|------|
+   In all cases the loop is injected automatically, so the agent reads your governing docs/ADRs *before* writing code and verifies against the spec after.
+3. **Drive the phases explicitly when you want.** Commands vary by agent:
+
+   | Command (Claude Code / Gemini CLI) | When |
+   |------------------------------------|------|
    | `/spec` | Show the loop, the phase commands, and where the current task stands |
    | `/spec:orient` | Load the docs/ADRs governing the surface you're about to touch |
    | `/spec:write` | Locate or write the spec (scope, acceptance, traceability) |
@@ -103,6 +107,16 @@ specguard setup                                                       # (re)wire
    | `/spec:sync` | Update the docs/contracts the change affects |
    | `/spec:commit` | Refresh the knowledge graph (if present), then commit (Conventional, no AI attribution) |
    | `/spec:status` | Print the loop checklist and mark the current step (anytime) |
+
+   **By agent:**
+
+   | Agent | How to invoke |
+   |-------|--------------|
+   | Claude Code | `/spec`, `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:commit`, `/spec:status` |
+   | Codex | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs" |
+   | GitHub Copilot | Prompt files in Copilot Chat: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
+   | Gemini CLI | Same slash commands as Claude Code |
+   | opencode (+ OpenWork) | `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
 
 4. **Turn it off / on** anytime: `specguard off` / `specguard on` (persists across sessions).
 5. **Something not working?** `specguard doctor` checks install health, repo topology, and the
@@ -181,6 +195,16 @@ skipping it silently rots the next agent's context.
 | GitHub Copilot | `.github/skills/` | `.github/prompts/spec-*.prompt.md` | `.github/copilot-instructions.md` |
 | Gemini CLI | `.gemini/extensions/` | `…/commands/spec/*.toml` + `spec.toml` | `GEMINI.md` |
 | opencode (+ OpenWork) | `.opencode/skill/` | `.opencode/command/spec-*.md` | `AGENTS.md` |
+
+**Activation and invocation:**
+
+| Agent | Activates via | Invoke phases |
+|-------|--------------|--------------|
+| Claude Code | SessionStart hook → `~/.claude/settings.json` | `/spec`, `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:commit`, `/spec:status` |
+| Codex | SessionStart hook → `~/.codex/hooks.json` | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs" |
+| GitHub Copilot | Always-on via `.github/copilot-instructions.md` (no hook) | Prompt files in Copilot Chat: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
+| Gemini CLI | Extension hooks → `.gemini/extensions/spec-guard/hooks/hooks.json` | Same slash commands as Claude Code |
+| opencode (+ OpenWork) | Always-on via `AGENTS.md`; OpenWork shares the same config automatically | `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
 
 ## Commands
 
