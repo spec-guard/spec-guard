@@ -114,7 +114,7 @@ specguard setup                                                       # (re)wire
    |-------|--------------|
    | Claude Code | `/spec`, `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:commit`, `/spec:status` |
    | Codex | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs" |
-   | GitHub Copilot | Prompt files in Copilot Chat: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
+   | GitHub Copilot | `#spec.prompt.md` (umbrella) + prompt files: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
    | Gemini CLI | Same slash commands as Claude Code |
    | opencode (+ OpenWork) | `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
 
@@ -202,7 +202,7 @@ skipping it silently rots the next agent's context.
 |-------|--------------|--------------|
 | Claude Code | SessionStart hook → `~/.claude/settings.json` | `/spec`, `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:commit`, `/spec:status` |
 | Codex | SessionStart hook → `~/.codex/hooks.json` | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs" |
-| GitHub Copilot | Always-on via `.github/copilot-instructions.md` (no hook) | Prompt files in Copilot Chat: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
+| GitHub Copilot | Always-on via `.github/copilot-instructions.md` (no hook) | `#spec.prompt.md` (umbrella) + prompt files: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
 | Gemini CLI | Extension hooks → `.gemini/extensions/spec-guard/hooks/hooks.json` | Same slash commands as Claude Code |
 | opencode (+ OpenWork) | Always-on via `AGENTS.md`; OpenWork shares the same config automatically | `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
 
