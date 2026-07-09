@@ -12,4 +12,4 @@ Run step 6 (SYNC) of the spec-guard loop.
 A change that ships code but not docs is incomplete. List every doc you updated.
 
 Then run **`/spec:commit`** to close SYNC: it refreshes the knowledge graph (if present) **before**
-committing and commits each affected deliverable repo in dependency order, then the backup root.
+committing and commits each affected deliverable repo in configured module order, then the backup root.

@@ -3,14 +3,14 @@
 // IP/deliverable wall lint. The golden rule: deliverable docs (`docs/`) must never link into
 // NON-deliverable content. Non-deliverable = the internal IP knowledge base (the configurable
 // `privateDir`, default `.private/`) and per-agent integration dirs (`.claude/`, `.codex/`,
-// `.gemini/`). A violation is a *hyperlink* whose target points into one of those at any `../`
-// depth (e.g. `](.private/x)`, `](../.private/x)`, `](.claude/x)`). A *prose* mention of those
-// paths (e.g. while explaining this rule) is NOT a violation.
+// `.github/`, `.gemini/`, `.opencode/`). A violation is a *hyperlink* whose target points into
+// one of those at any `../` depth (e.g. `](.private/x)`, `](../.private/x)`, `](.claude/x)`).
+// A *prose* mention of those paths (e.g. while explaining this rule) is NOT a violation.
 
 const fs = require('fs');
 const path = require('path');
 
-const DEFAULT_AGENT_DIRS = ['.claude/', '.codex/', '.gemini/'];
+const DEFAULT_AGENT_DIRS = ['.claude/', '.codex/', '.github/', '.gemini/', '.opencode/'];
 
 function esc(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

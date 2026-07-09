@@ -2,6 +2,9 @@
 
 **Status:** Accepted
 
+**Capability note:** ADR 0010 is the current source of truth for support levels and hook
+availability. This ADR remains the source for single-source rendering and path layout.
+
 ## Context
 
 spec-guard targets Claude Code, Codex, GitHub Copilot, and Gemini CLI. Each agent has its own
@@ -21,8 +24,8 @@ Per-agent targets:
 | Agent | Skill dir | Commands | Hooks | Rules file |
 |---|---|---|---|---|
 | claude-code | `.claude/skills/spec-guard/` | `.claude/commands/spec/*.md` | `settings.json` | `CLAUDE.md` |
-| codex | `~/.codex/skills/spec-guard/` | skills+hooks (v0.1.0) | `~/.codex/hooks.json` | `AGENTS.md` |
-| github-copilot | `.github/skills/spec-guard/` | `.github/prompts/spec-*.prompt.md` | Copilot JSON hooks | `.github/copilot-instructions.md` |
+| codex | `~/.codex/skills/spec-guard/` (owned by `setup`) | — (natural language only) | `~/.codex/hooks.json` | `AGENTS.md` |
+| github-copilot | `.github/skills/spec-guard/` | `.github/prompts/spec-*.prompt.md` | — (project instructions / prompt files) | `.github/copilot-instructions.md` |
 | gemini | `.gemini/extensions/spec-guard/skills/…` | `…/commands/spec/*.toml` | extension `hooks/hooks.json` | `GEMINI.md` |
 | opencode | `.opencode/skill/spec-guard/` | `.opencode/command/spec-*.md` | — (AGENTS.md project memory) | `AGENTS.md` |
 

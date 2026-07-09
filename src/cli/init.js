@@ -70,7 +70,7 @@ async function maybeWireMachine(flags, home, agentList) {
   const needGlobal = agentList.some((id) => id === 'claude-code' || id === 'codex');
   if (!needGlobal) return;
   const globalM = manifest.load(globalManifestPath(home));
-  if (Object.keys(globalM.files || {}).length > 0) {
+  if (!flags['with-global'] && Object.keys(globalM.files || {}).length > 0) {
     // Already wired on this machine — say so instead of skipping silently.
     process.stdout.write("  machine hooks already wired (run 'specguard setup' to refresh them).\n");
     return;

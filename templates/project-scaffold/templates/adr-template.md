@@ -12,4 +12,4 @@ The decision, stated plainly.
 What becomes easier or harder. Trade-offs accepted.
 
 ## Traceability
-- Implemented by: [spec](../specs/NNNN-title.md) / [plan](../plans/NNNN-title.md)
+- Implemented by: spec `docs/specs/NNNN-title.md` / plan `docs/plans/NNNN-title.md`

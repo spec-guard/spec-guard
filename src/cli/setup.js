@@ -16,7 +16,9 @@ const installer = require('../core/installer');
 const jsonmerge = require('../core/jsonmerge');
 
 // Wire a Claude/Codex-style hooks config file. Returns the list of actions.
-function wireHooks(configPath, activatePath, syncCheckPath) {
+function wireHooks(configPath, activatePath, syncCheckPath, opts) {
+  const options = opts || {};
+  const stopCommand = options.stopCommand || `bash "${syncCheckPath}"`;
   let cfg = {};
   try { cfg = JSON.parse(fs.readFileSync(configPath, 'utf8')); } catch (e) {}
   const a = jsonmerge.upsertHookCommand(cfg, 'SessionStart', {
@@ -24,7 +26,7 @@ function wireHooks(configPath, activatePath, syncCheckPath) {
     timeout: 5,
     statusMessage: 'Loading spec-guard governance...',
   });
-  const b = jsonmerge.upsertHookCommand(a.config, 'Stop', { command: `bash "${syncCheckPath}"`, timeout: 5 });
+  const b = jsonmerge.upsertHookCommand(a.config, 'Stop', { command: stopCommand, timeout: 5 });
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
   fs.writeFileSync(configPath, JSON.stringify(b.config, null, 2) + '\n');
   return { SessionStart: a.action, Stop: b.action };
@@ -74,7 +76,10 @@ function wireMachine(home, opts) {
     const syncCheckPath = path.join(hooksDir, 'sync-check.sh');
     verifyPaths.push(activatePath, syncCheckPath);
 
-    const actions = wireHooks(agents.resolveHooksConfigPath(agent, ctx), activatePath, syncCheckPath);
+    const stopCommand = id === 'codex'
+      ? `SPEC_GUARD_HOOK_FORMAT=codex-silent bash "${syncCheckPath}"`
+      : `bash "${syncCheckPath}"`;
+    const actions = wireHooks(agents.resolveHooksConfigPath(agent, ctx), activatePath, syncCheckPath, { stopCommand });
     for (const a of [].concat(skillActs || [], hookActs || [])) allActions.push(a && a.action);
     allActions.push(actions.SessionStart, actions.Stop);
 

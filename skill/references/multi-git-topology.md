@@ -40,8 +40,9 @@ across repo boundaries, not just folder boundaries.
 ## What this means for the loop
 
 - **PLAN / ripple:** a contract change crosses *repo* boundaries, not just module folders.
-  Update every consuming deliverable repo, and commit each in dependency order — the change is
-  not "done" until each affected repo is committed, plus the backup root.
+  Update every consuming deliverable repo, and commit each in the configured module order
+  (which should encode dependency order when that matters) — the change is not "done" until
+  each affected repo is committed, plus the backup root.
 - **SYNC / commit:** commit inside the affected deliverable repo(s) first, then let the backup
   root capture the state. Committing only at the root leaves the deliverable repos stale.
 - **Knowledge graph:** one graph **per module** (`<module>/graphify-out/`, built with the module as
@@ -58,4 +59,4 @@ across repo boundaries, not just folder boundaries.
 - [ ] Does each deliverable repo's `.gitignore` exclude `${privateDir}/`, agent dirs (`.claude/`, `.codex/`, `.gemini/`), `.env*`, and `graphify-out/`?
 - [ ] If a ride-along dir is becoming a deliverable repo, was a complete `.gitignore` added before `git init` + push? (IP must not leak into the first push.)
 - [ ] Is each module's `.git/` directory present and not stuck as `.git_backup` after a backup root commit? (The hook should rename it back automatically; verify if any hook failed.)
-- [ ] For a contract change that crossed repo boundaries: was each affected deliverable repo committed individually in dependency order, not lumped into a single backup-root commit?
+- [ ] For a contract change that crossed repo boundaries: was each affected deliverable repo committed individually in configured module order, not lumped into a single backup-root commit?

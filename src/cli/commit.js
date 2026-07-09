@@ -79,28 +79,35 @@ function syncRootGraph(root) {
   return `  graphify update (root): ${r.status === 0 ? 'ok' : 'failed (review)'}`;
 }
 
-// Backup-monorepo case: refresh each impacted module's graph, then re-merge the freshly-updated
-// module graphs into the curated root graph. Runs BEFORE the commits so every graph lands in the
+// Backup-monorepo case: refresh each impacted module's graph, then re-merge every available
+// module graph into the curated root graph. Runs BEFORE the commits so every graph lands in the
 // same commit as its code. Structural/incremental + curated-safe (no naive full rebuild); the deep
 // semantic pass is the agent's job. Best-effort + fallback-safe.
-function syncModuleGraphs(root, modules) {
+function syncModuleGraphs(root, modules, changedModules) {
   if (!graphify.available(root)) return '  graphify: not present (skipped)';
   const out = [];
+  const changed = new Set(changedModules || modules);
   for (const m of modules) {
     const dir = path.join(root, m);
+    if (!changed.has(m)) continue;
     let r;
     if (graphify.available(dir)) {
       r = spawnSync('graphify', ['update'], { cwd: dir, encoding: 'utf8', timeout: 120000 });
       out.push(`    update ${m}: ${r.status === 0 ? 'ok' : 'failed'}`);
     } else {
-      r = spawnSync('graphify', ['extract', `./${m}/`], { cwd: root, encoding: 'utf8', timeout: 120000 });
+      r = spawnSync('graphify', ['extract', '.'], { cwd: dir, encoding: 'utf8', timeout: 120000 });
       out.push(`    extract ${m} (first build): ${r.status === 0 ? 'ok' : 'failed'}`);
     }
     stageGraph(dir);
   }
-  if (modules.length) {
-    const merge = spawnSync('graphify', ['merge-graphs'].concat(modules.map((m) => `${m}/graphify-out/graph.json`)).concat(['--out', 'graphify-out/graph.json']), { cwd: root, encoding: 'utf8', timeout: 120000 });
+  const mergeInputs = modules
+    .filter((m) => fs.existsSync(path.join(root, m, 'graphify-out', 'graph.json')))
+    .map((m) => `${m}/graphify-out/graph.json`);
+  if (mergeInputs.length) {
+    const merge = spawnSync('graphify', ['merge-graphs'].concat(mergeInputs).concat(['--out', 'graphify-out/graph.json']), { cwd: root, encoding: 'utf8', timeout: 120000 });
     out.push(`    merge -> root graph: ${merge.status === 0 ? 'ok' : 'failed (review; curated build is sensitive)'}`);
+  } else if (modules.length) {
+    out.push('    merge -> root graph: skipped (no module graphs produced)');
   }
   stageGraph(root);
   return '  graphify (pre-commit structural re-sync; run /graphify --mode deep in-agent for semantic):\n' + out.join('\n');
@@ -156,7 +163,7 @@ function run(args) {
     return fs.existsSync(path.join(dir, '.git')) && hasAnyChanges(dir);
   });
 
-  if (flags.graphify) process.stdout.write(syncModuleGraphs(root, changed) + '\n');
+  if (flags.graphify) process.stdout.write(syncModuleGraphs(root, modules, changed) + '\n');
 
   const impacted = [];
   for (const m of changed) {

@@ -44,7 +44,6 @@ test('init installs all four agents and global wiring is single-entry', () => {
       path.join(repo, '.claude/skills/spec-guard/SKILL.md'),
       path.join(repo, '.claude/commands/spec/orient.md'),
       path.join(repo, '.claude/commands/spec.md'), // bare /spec umbrella at namespace root
-      path.join(home, '.codex/skills/spec-guard/SKILL.md'),
       path.join(repo, '.github/skills/spec-guard/SKILL.md'),
       path.join(repo, '.github/prompts/spec-orient.prompt.md'),
       path.join(repo, '.github/prompts/spec.prompt.md'), // /spec umbrella (flat)
@@ -67,8 +66,12 @@ test('init installs all four agents and global wiring is single-entry', () => {
     assert.match(skill, /docs\/specs/);
     assert.doesNotMatch(skill, /\$\{specDir\}/);
     assert.doesNotMatch(skill, /superpowers/);
+    assert.ok(!fs.existsSync(path.join(home, '.codex/skills/spec-guard/SKILL.md')),
+      'repo init must not write the home-scoped Codex skill');
 
     sg(home, ['setup']);
+    assert.ok(fs.existsSync(path.join(home, '.codex/skills/spec-guard/SKILL.md')),
+      'setup owns the home-scoped Codex skill');
     const settings = JSON.parse(fs.readFileSync(path.join(home, '.claude/settings.json'), 'utf8'));
     assert.strictEqual(jm.countOwned(settings, 'SessionStart'), 1);
     assert.strictEqual(jm.countOwned(settings, 'Stop'), 1);
@@ -195,6 +198,52 @@ test('init --agent all installs every known agent', () => {
   }
 });
 
+test('codex init does not let one repo clobber the home-scoped skill for another repo', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-home-'));
+  const repoA = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-repo-a-'));
+  const repoB = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-repo-b-'));
+  try {
+    sg(home, ['init', repoA, '--agent', 'codex', '--spec-dir', 'docs/specs-a']);
+    assert.ok(!fs.existsSync(path.join(home, '.codex/skills/spec-guard/SKILL.md')),
+      'codex init alone must not write a repo-specific home skill');
+    assert.match(fs.readFileSync(path.join(repoA, 'AGENTS.md'), 'utf8'), /docs\/specs-a/);
+
+    sg(home, ['setup']);
+    const afterSetup = fs.readFileSync(path.join(home, '.codex/skills/spec-guard/SKILL.md'), 'utf8');
+
+    sg(home, ['init', repoB, '--agent', 'codex', '--spec-dir', 'docs/specs-b']);
+    const afterRepoB = fs.readFileSync(path.join(home, '.codex/skills/spec-guard/SKILL.md'), 'utf8');
+
+    assert.strictEqual(afterRepoB, afterSetup, 'second repo init must not rewrite the global Codex skill');
+    assert.match(fs.readFileSync(path.join(repoB, 'AGENTS.md'), 'utf8'), /docs\/specs-b/);
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+    fs.rmSync(repoA, { recursive: true, force: true });
+    fs.rmSync(repoB, { recursive: true, force: true });
+  }
+});
+
+test('init --with-global refreshes machine wiring even when the global manifest is partial', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    fs.mkdirSync(path.join(home, '.config/spec-guard'), { recursive: true });
+    fs.writeFileSync(
+      path.join(home, '.config/spec-guard/manifest.json'),
+      JSON.stringify({ version: 1, files: { 'global:claude-code:hooks:hookbundle:activate.js': { hash: 'old' } } }, null, 2) + '\n'
+    );
+
+    sg(home, ['init', repo, '--agent', 'codex', '--with-global']);
+
+    assert.ok(fs.existsSync(path.join(home, '.codex/skills/spec-guard/SKILL.md')),
+      'explicit --with-global must create the Codex home skill even with a partial manifest');
+    const hooks = JSON.parse(fs.readFileSync(path.join(home, '.codex/hooks.json'), 'utf8'));
+    assert.strictEqual(jm.countOwned(hooks, 'SessionStart'), 1);
+    assert.strictEqual(jm.countOwned(hooks, 'Stop'), 1);
+  } finally {
+    cleanup();
+  }
+});
+
 test('init --with-global wires the machine in one shot (no separate setup)', () => {
   const { home, repo, cleanup } = sandbox();
   try {
@@ -236,6 +285,63 @@ test('doctor --quiet (machine-check) fails before install, passes after', () => 
     assert.strictEqual(sgStatus(home, ['doctor', '--quiet']).status, 1, 'no global install -> non-zero');
     sg(home, ['setup']);
     assert.strictEqual(sgStatus(home, ['doctor', '--quiet']).status, 0, 'after install -> zero');
+  } finally {
+    cleanup();
+  }
+});
+
+test('doctor reports per-agent incomplete installs without implying hooks for every agent', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'codex']);
+    let d = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d.status, 0);
+    assert.match(d.stdout, /agent health:/);
+    assert.match(d.stdout, /codex: warning \(partial; home-scoped skill\).*hooks missing/);
+
+    sg(home, ['setup']);
+    d = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d.status, 0);
+    assert.match(d.stdout, /codex: ok \(partial; home-scoped skill; hooks wired\)/);
+
+    const hooksPath = path.join(home, '.codex/hooks.json');
+    const hooks = JSON.parse(fs.readFileSync(hooksPath, 'utf8'));
+    hooks.hooks.Stop[0].hooks[0].command = 'bash "/old/.codex/hooks/spec-guard/sync-check.sh"';
+    fs.writeFileSync(hooksPath, JSON.stringify(hooks, null, 2) + '\n');
+
+    d = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d.status, 0);
+    assert.match(d.stdout, /codex: warning \(partial; home-scoped skill\).*hooks stale \(Stop; run: specguard setup\)/);
+    assert.strictEqual(sgStatus(home, ['doctor', '--quiet']).status, 1, 'machine check fails on stale global hook');
+
+    sg(home, ['setup', '--force']);
+    const syncCheck = path.join(home, '.codex/hooks/spec-guard/sync-check.sh');
+    fs.writeFileSync(syncCheck, '#!/usr/bin/env bash\necho old text\n');
+    d = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d.status, 0);
+    assert.match(d.stdout, /codex: warning \(partial; home-scoped skill\).*hook bundle stale \(run: specguard setup --force\)/);
+    assert.strictEqual(sgStatus(home, ['doctor', '--quiet']).status, 1, 'machine check fails on stale hook bundle');
+  } finally {
+    cleanup();
+  }
+});
+
+test('doctor gives repo-scoped repair hint for stale Gemini hooks', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'gemini']);
+    let d = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d.status, 0);
+    assert.match(d.stdout, /gemini: ok \(complete; repo-scoped skill; hooks wired\)/);
+
+    const hooksPath = path.join(repo, '.gemini/extensions/spec-guard/hooks/hooks.json');
+    const hooks = JSON.parse(fs.readFileSync(hooksPath, 'utf8'));
+    hooks.hooks.Stop[0].hooks[0].command = 'bash "/old/.gemini/extensions/spec-guard/hooks/spec-guard/sync-check.sh"';
+    fs.writeFileSync(hooksPath, JSON.stringify(hooks, null, 2) + '\n');
+
+    d = sgStatus(home, ['doctor', repo]);
+    assert.strictEqual(d.status, 0);
+    assert.match(d.stdout, /gemini: warning \(complete; repo-scoped skill\).*hooks stale \(Stop; run: specguard init <repo> --agent gemini\)/);
   } finally {
     cleanup();
   }

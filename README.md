@@ -9,8 +9,9 @@
 
 `spec-guard` is a front-of-pipeline **governance** layer for spec-driven development with AI
 coding agents — in large, multi-module, multi-repo codebases. It installs as an always-on skill
-plus slash commands and lifecycle hooks for **Claude Code, Codex, GitHub Copilot, Gemini CLI, and
-opencode** (incl. OpenWork), all rendered from a single source.
+plus the command, prompt, project-memory, and lifecycle-hook surfaces each agent actually supports
+for **Claude Code, Codex, GitHub Copilot, Gemini CLI, and opencode** (incl. OpenWork), all rendered
+from a single source.
 
 Where GitHub **Spec Kit** and **OpenSpec** give you the *mechanics* of spec-driven development
 (scaffolding, slash commands), spec-guard adds the *governance* they lack — and brings the
@@ -38,9 +39,10 @@ mechanics along too.
 - **One source, every agent.** A single skill + command set rendered per agent via a path matrix.
   Adding an agent is a row, not a fork.
 - **Commit, governed.** `specguard commit` produces a Conventional Commit (no AI attribution),
-  single repo or `--all` across the backup monorepo in dependency order.
-- **Reversible by design.** Every file it writes is tracked in a manifest; auto-updates never clobber
-  your edits, and `uninstall` removes exactly what it added (and nothing of yours).
+  single repo or `--all` across the backup monorepo in configured module order.
+- **Reversible by design.** Repo-owned and machine-owned files are tracked in their respective
+  manifests; auto-updates never clobber your edits, and `uninstall`/`uninstall --global` remove the
+  matching scope without touching your content.
 - **Optional graphify enhancer.** When a `graphify-out/` knowledge graph exists, ORIENT/VERIFY use
   it; otherwise it falls back to grep/read. Never required.
 
@@ -80,7 +82,7 @@ this machine's session hooks; pass flags to skip the prompts in CI:
 ```bash
 specguard init . --agent claude-code,codex --with-global --scaffold   # non-interactive, also wire the machine
 specguard init . --agent all --no-global                              # every agent, don't touch machine config
-specguard setup                                                       # (re)wire just the machine hooks + statusline
+specguard setup                                                       # (re)wire machine hooks + Claude statusline
 ```
 
 ## Quickstart
@@ -181,12 +183,15 @@ done. Here's the same change run through the loop:
 | **PLAN** | — | Map the ripple and decompose: migration → the **shared** `Currency` enum (reuse it, never fork a local copy) → request DTO → endpoint validation → `OrderCreated` payload (version-bumped) → consumers. Each increment compiles and is reviewable on its own. |
 | **BUILD** | — | Implement one increment, matching the surrounding code's error model, DI, and logging — house style over personal style. Stay in scope: no drive-by refactors. |
 | **VERIFY** | `/spec:verify` | Walk each acceptance criterion **with evidence**, run the test/lint/type gate (paste the real output — never "tests probably pass"), then take a verifier stance and try to prove it wrong. Re-check the invariants: the `Currency` switch is exhaustive, every `*_id` has an FK, the event version is bumped. |
-| **SYNC** | `/spec:commit` | Update the API contract doc, the event catalog, and the ADR status — a schema change is *migration + docs + version bump, all three or none*. Keep `docs/` free of any link into `.private/`. Refresh the graph, then commit as a Conventional Commit, no AI attribution. |
+| **SYNC** | `/spec:sync` | Update the API contract doc, the event catalog, and the ADR status — a schema change is *migration + docs + version bump, all three or none*. Keep `docs/` free of any link into `.private/`. Then run `/spec:commit` to refresh the graph and commit as a Conventional Commit, no AI attribution. |
 
 A change that ships the code but not the docs is **incomplete** — SYNC is part of "done", and
 skipping it silently rots the next agent's context.
 
 ## Supported agents
+
+For the full support matrix, install paths, verification steps, and troubleshooting, see
+[`docs/setup/agent-support.md`](docs/setup/agent-support.md).
 
 | Agent | Skill | Commands | Rules file |
 |-------|-------|----------|------------|
@@ -211,7 +216,7 @@ skipping it silently rots the next agent's context.
 | Command | Purpose |
 |---------|---------|
 | `init [path] [--agent all\|none\|…] [--with-global\|--no-global] [--scaffold] [--spec-dir …] [--plans-dir …] [--private-dir …] [--scope all]` | Install into a repo (per-agent skill, commands, hooks, rules-block); prompts on a TTY |
-| `setup` | Wire this machine's Claude Code / Codex session hooks + statusline |
+| `setup` | Wire this machine's Claude Code / Codex session hooks + Claude statusline |
 | `uninstall [path] [--global] [--purge] [--dry-run]` | Remove spec-guard from a repo, or from this machine |
 | `doctor [path]` | Diagnose install health, repo topology, the IP/deliverable wall, and unfilled convention-doc placeholders |
 | `commit [--all] [--scope …] [--graphify] -m …` | Commit a message **you** author (validated as Conventional, AI attribution stripped), single repo or across the backup monorepo; `--graphify` refreshes the knowledge graph first |
@@ -229,7 +234,7 @@ Run `specguard <command> --help` for per-command usage, subcommands, and flags.
 | `--agent <list>` | `init`, `uninstall` | Comma-separated agents, or `all` / `none` (default on a TTY: prompt; else `claude-code`) |
 | `--with-global` / `--no-global` | `init` | Wire (or skip) this machine's hooks without prompting |
 | `--scaffold` | `init` | Also create the `docs/` + `.private/` doc tree **and seed fill-in starter docs** (architecture, error-handling, schema, observability, coding-guidelines) — all write-if-absent. Each convention doc is single-source: on a brownfield repo, replace any that duplicates an existing doc with a one-line pointer (`doctor` flags unfilled ones) |
-| `--spec-dir` / `--plans-dir` | `init` | Override the spec/plan locations (default `docs/specs`, `docs/plans`) |
+| `--spec-dir` / `--plans-dir` | `init` | Override repo rules and repo-scoped generated files (default `docs/specs`, `docs/plans`); Codex's home skill remains global and should defer to `AGENTS.md` for repo-specific paths |
 | `--private-dir` | `init`, `migrate` | Override the IP knowledge-base location (default `.private`) |
 | `--scope all` | `init` | Treat the tree as a backup monorepo (record module list for ripple/commit order) |
 | `--scope <a,b>` | `commit` | Commit only the named modules (otherwise `--all` = every impacted one) |
@@ -243,7 +248,7 @@ Run `specguard <command> --help` for per-command usage, subcommands, and flags.
 
 ## Uninstall
 
-spec-guard tracks every file it writes, so removal is exact — it deletes only what it added and
+spec-guard tracks every repo-scoped file it writes, so removal is exact — it deletes only what it added and
 leaves your `docs/`, specs, plans, and `.private/` untouched. Rules files (`CLAUDE.md`,
 `AGENTS.md`, …) are never deleted; only the managed block between the
 `<!-- spec-guard:start -->` / `<!-- spec-guard:end -->` markers is stripped, preserving your
@@ -285,8 +290,8 @@ Co-tenant hooks (e.g. other tools wired into the same `settings.json`) are match
   files silently with a count in the session note but does not write a sidecar.
 - **Block-scoped rules.** In rules files spec-guard owns only the delimited block; your prose is
   never read into the hash or overwritten.
-- **Reversible.** `uninstall` mirrors install through the same path matrix, so it removes exactly
-  the set of files install created.
+- **Reversible.** `uninstall` mirrors repo init through the same path matrix, while
+  `uninstall --global` removes machine-owned Claude Code/Codex hooks and home skills.
 
 ## Configuration
 

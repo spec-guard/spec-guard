@@ -126,6 +126,120 @@ test('--graphify refreshes the graph BEFORE the commit (refresh is in the commit
   fs.rmSync(bin, { recursive: true, force: true });
 });
 
+test('--all --graphify first-build extracts from inside each module and merges produced graphs only', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-backup-'));
+  const rootGit = (args) => spawnSync('git', ['-C', root].concat(args), { encoding: 'utf8' });
+  rootGit(['init', '-q']);
+  rootGit(['config', 'user.name', 'Test']);
+  rootGit(['config', 'user.email', 'test@example.com']);
+  fs.mkdirSync(path.join(root, '.spec-guard'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.spec-guard/config.json'), JSON.stringify({ modules: ['service-a', 'service-b'] }, null, 2) + '\n');
+  fs.mkdirSync(path.join(root, 'graphify-out'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'graphify-out/graph.json'), '{"root":true}\n');
+
+  for (const m of ['service-a', 'service-b']) {
+    const dir = path.join(root, m);
+    fs.mkdirSync(dir, { recursive: true });
+    const g = (args) => spawnSync('git', ['-C', dir].concat(args), { encoding: 'utf8' });
+    g(['init', '-q']);
+    g(['config', 'user.name', 'Test']);
+    g(['config', 'user.email', 'test@example.com']);
+    fs.writeFileSync(path.join(dir, 'file.txt'), 'initial\n');
+    g(['add', '-A']);
+    g(['commit', '-m', 'feat: initial']);
+    fs.writeFileSync(path.join(dir, 'file.txt'), 'changed\n');
+  }
+
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-fakebin-'));
+  const log = path.join(root, 'graphify.log');
+  fs.writeFileSync(path.join(bin, 'graphify'), [
+    '#!/bin/sh',
+    `printf '%s|%s\\n' "$PWD" "$*" >> "${log}"`,
+    'if [ "$1" = "extract" ]; then',
+    '  mkdir -p graphify-out',
+    '  if [ "$(basename "$PWD")" = "service-b" ]; then exit 2; fi',
+    '  printf \'{"module":"%s"}\\n\' "$(basename "$PWD")" > graphify-out/graph.json',
+    '  exit 0',
+    'fi',
+    'if [ "$1" = "merge-graphs" ]; then',
+    '  printf \'%s\\n\' "$*" > graphify-out/graph.json',
+    '  exit 0',
+    'fi',
+    'exit 0',
+    '',
+  ].join('\n'));
+  fs.chmodSync(path.join(bin, 'graphify'), 0o755);
+
+  const oldPath = process.env.PATH;
+  process.env.PATH = bin + path.delimiter + oldPath;
+  let code;
+  try { ({ code } = capture(() => commit.run([root, '--all', '--graphify', '-m', 'feat: x']))); }
+  finally { process.env.PATH = oldPath; }
+
+  assert.strictEqual(code, 0);
+  const calls = fs.readFileSync(log, 'utf8');
+  assert.match(calls, new RegExp(`${path.join(root, 'service-a').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\|extract \\.`));
+  assert.match(calls, new RegExp(`${path.join(root, 'service-b').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\|extract \\.`));
+  assert.match(calls, /\|merge-graphs service-a\/graphify-out\/graph\.json --out graphify-out\/graph\.json/);
+  assert.doesNotMatch(calls, /merge-graphs .*service-b\/graphify-out\/graph\.json/);
+
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.rmSync(bin, { recursive: true, force: true });
+});
+
+test('--all --graphify root merge keeps unchanged module graphs', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-backup-'));
+  const rootGit = (args) => spawnSync('git', ['-C', root].concat(args), { encoding: 'utf8' });
+  rootGit(['init', '-q']);
+  rootGit(['config', 'user.name', 'Test']);
+  rootGit(['config', 'user.email', 'test@example.com']);
+  fs.mkdirSync(path.join(root, '.spec-guard'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.spec-guard/config.json'), JSON.stringify({ modules: ['service-a', 'service-b'] }, null, 2) + '\n');
+  fs.mkdirSync(path.join(root, 'graphify-out'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'graphify-out/graph.json'), '{"root":true}\n');
+
+  for (const m of ['service-a', 'service-b']) {
+    const dir = path.join(root, m);
+    fs.mkdirSync(path.join(dir, 'graphify-out'), { recursive: true });
+    const g = (args) => spawnSync('git', ['-C', dir].concat(args), { encoding: 'utf8' });
+    g(['init', '-q']);
+    g(['config', 'user.name', 'Test']);
+    g(['config', 'user.email', 'test@example.com']);
+    fs.writeFileSync(path.join(dir, 'graphify-out/graph.json'), `{"module":"${m}"}\n`);
+    fs.writeFileSync(path.join(dir, 'file.txt'), 'initial\n');
+    g(['add', '-A']);
+    g(['commit', '-m', 'feat: initial']);
+  }
+  fs.writeFileSync(path.join(root, 'service-a', 'file.txt'), 'changed\n');
+
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-fakebin-'));
+  const log = path.join(root, 'graphify.log');
+  fs.writeFileSync(path.join(bin, 'graphify'), [
+    '#!/bin/sh',
+    `printf '%s|%s\\n' "$PWD" "$*" >> "${log}"`,
+    'if [ "$1" = "update" ]; then exit 0; fi',
+    'if [ "$1" = "merge-graphs" ]; then printf \'%s\\n\' "$*" > graphify-out/graph.json; exit 0; fi',
+    'exit 0',
+    '',
+  ].join('\n'));
+  fs.chmodSync(path.join(bin, 'graphify'), 0o755);
+
+  const oldPath = process.env.PATH;
+  process.env.PATH = bin + path.delimiter + oldPath;
+  let code;
+  try { ({ code } = capture(() => commit.run([root, '--all', '--graphify', '-m', 'feat: x']))); }
+  finally { process.env.PATH = oldPath; }
+
+  assert.strictEqual(code, 0);
+  const calls = fs.readFileSync(log, 'utf8');
+  assert.match(calls, new RegExp(`${path.join(root, 'service-a').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\|update`));
+  assert.doesNotMatch(calls, new RegExp(`${path.join(root, 'service-b').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\|update`));
+  assert.match(calls, /\|merge-graphs service-a\/graphify-out\/graph\.json service-b\/graphify-out\/graph\.json --out graphify-out\/graph\.json/);
+
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.rmSync(bin, { recursive: true, force: true });
+});
+
 test('missing --message errors', () => {
   const { d } = gitRepo();
   const code = silent(() => commit.run([d]));

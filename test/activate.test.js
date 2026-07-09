@@ -17,8 +17,8 @@ const activateSrc = fs.readFileSync(
   'utf8'
 );
 
-// Append an export statement so we can pull out tryAutoUpdate
-const patchedSrc = activateSrc + '\nmodule.exports = { tryAutoUpdate };\n';
+// Append an export statement so we can pull out internals.
+const patchedSrc = activateSrc + '\nmodule.exports = { tryAutoUpdate, formatAutoUpdateNote };\n';
 
 function loadActivate(hookDir) {
   const Module = require('module');
@@ -115,6 +115,22 @@ test('tryAutoUpdate: user-edited file is protected and not overwritten', () => {
   assert.deepEqual(result, { updated: 0, protectedCount: 1 });
   const actual = fs.readFileSync(path.join(repoRoot, '.claude/skills/spec-guard/SKILL.md'), 'utf8');
   assert.equal(actual, userEditedContent, 'user-edited file must not be overwritten');
+});
+
+test('formatAutoUpdateNote reports protected-only auto-update results', () => {
+  const tmp = mkTmp();
+  const hookDir = makeHookDir(tmp);
+  const { formatAutoUpdateNote } = loadActivate(hookDir);
+
+  assert.match(
+    formatAutoUpdateNote({ updated: 0, protectedCount: 1 }),
+    /Skill auto-update skipped \(1 user-edited file protected — manual review required\)/
+  );
+  assert.match(
+    formatAutoUpdateNote({ updated: 2, protectedCount: 1 }),
+    /2 files refreshed, 1 user-edited file protected/
+  );
+  assert.strictEqual(formatAutoUpdateNote({ updated: 0, protectedCount: 0 }), '');
 });
 
 test('tryAutoUpdate: missing manifest returns null (not empty result)', () => {

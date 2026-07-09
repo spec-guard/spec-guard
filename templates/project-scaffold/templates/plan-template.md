@@ -1,6 +1,6 @@
 # Plan NNNN — <title>
 
-**Spec:** [design spec](../specs/NNNN-title.md)
+**Spec:** `docs/specs/NNNN-title.md`
 
 ## Context
 Why this change is being made — the problem it addresses and the intended outcome.

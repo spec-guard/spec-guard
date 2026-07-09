@@ -181,6 +181,21 @@ function resolveSkill(repoRoot) {
   }
 }
 
+function formatAutoUpdateNote(result) {
+  if (!result || (result.updated <= 0 && result.protectedCount <= 0)) return '';
+  const updated = result.updated || 0;
+  const protectedCount = result.protectedCount || 0;
+  const updatedText = `${updated} file${updated !== 1 ? 's' : ''} refreshed`;
+  const protectedText = `${protectedCount} user-edited file${protectedCount !== 1 ? 's' : ''} protected`;
+  if (protectedCount > 0 && updated > 0) {
+    return `Skill auto-updated (${updatedText}, ${protectedText} — manual review required).\n\n`;
+  }
+  if (protectedCount > 0) {
+    return `Skill auto-update skipped (${protectedText} — manual review required).\n\n`;
+  }
+  return `Skill auto-updated (${updatedText}).\n\n`;
+}
+
 function main() {
   const flagPath = getFlagPath();
   const mode = getDefaultMode();
@@ -198,13 +213,7 @@ function main() {
   let autoUpdateNote = '';
   if (repoRoot) {
     const result = tryAutoUpdate(repoRoot);
-    if (result && result.updated > 0) {
-      if (result.protectedCount > 0) {
-        autoUpdateNote = `Skill auto-updated (${result.updated} file${result.updated !== 1 ? 's' : ''} refreshed, ${result.protectedCount} user-edited file${result.protectedCount !== 1 ? 's' : ''} protected — manual review required).\n\n`;
-      } else {
-        autoUpdateNote = `Skill auto-updated (${result.updated} file${result.updated !== 1 ? 's' : ''} refreshed).\n\n`;
-      }
-    }
+    autoUpdateNote = formatAutoUpdateNote(result);
   }
 
   const { content, warn } = resolveSkill(repoRoot);

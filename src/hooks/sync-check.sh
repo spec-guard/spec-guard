@@ -14,6 +14,15 @@
 #   - Not in a git repo
 
 PROJECT_DIR="${CLAUDE_CWD:-$(pwd)}"
+SCRIPT_PATH="${BASH_SOURCE[0]:-$0}"
+HOOK_FORMAT="${SPEC_GUARD_HOOK_FORMAT:-}"
+
+# Codex loads hook commands at session start. If `setup` updates hooks.json during the
+# same session, the running process may still call this script without the new env var.
+# Detect the Codex-installed copy so current sessions emit only JSON on stdout.
+case "$SCRIPT_PATH" in
+  */.codex/hooks/*) HOOK_FORMAT="${HOOK_FORMAT:-codex-silent}" ;;
+esac
 
 if ! git -C "$PROJECT_DIR" rev-parse --git-dir > /dev/null 2>&1; then
   exit 0
@@ -33,8 +42,16 @@ FUNC_CODE=$(echo "$ALL_CHANGED" | grep -E '\.(py|ts|tsx|js|jsx)$' | \
 DOCS=$(echo "$ALL_CHANGED" | grep -E '(/docs/|^docs/|\.private/|\.internal/|\.ip/|\.claude/docs/|CLAUDE\.md|AGENTS\.md|GEMINI\.md|copilot-instructions\.md)' | head -1)
 
 if [ -n "$FUNC_CODE" ] && [ -z "$DOCS" ]; then
-  echo "[SPEC-GUARD] Step 6 (SYNC) pending - functional code changed without docs."
-  echo "Changed files:"
-  echo "$FUNC_CODE" | sed 's/^/  /'
-  echo "Check whether architecture docs, the relevant ADR, or CLAUDE.md need updating."
+  if [ "$HOOK_FORMAT" = "codex-json" ] || [ "$HOOK_FORMAT" = "codex-silent" ]; then
+    printf '%s\n' '{}'
+  else
+    {
+      echo "[SPEC-GUARD] Step 6 (SYNC) pending - functional code changed without docs."
+      echo "Changed files:"
+      echo "$FUNC_CODE" | sed 's/^/  /'
+      echo "Check whether architecture docs, the relevant ADR, or CLAUDE.md need updating."
+    }
+  fi
+elif [ "$HOOK_FORMAT" = "codex-json" ] || [ "$HOOK_FORMAT" = "codex-silent" ]; then
+  printf '%s\n' '{}'
 fi

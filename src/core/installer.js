@@ -241,6 +241,9 @@ function scaffoldGraphifyignore(repoRoot, vars) {
 }
 
 // Apply the full per-agent repo install for a list of agents. Shared by `init` and `update`.
+// Home-scoped skill trees (currently Codex) are deliberately excluded here: `init` may record
+// repo-specific paths, but it must not overwrite a single home skill with one repo's settings.
+// Those skills are owned by `setup` and the global manifest.
 // Returns [{ id, acts }].
 function applyAgents(ctx, agentList, vars, m, opts) {
   const options = opts || {};
@@ -248,7 +251,9 @@ function applyAgents(ctx, agentList, vars, m, opts) {
   for (const id of agentList) {
     const agent = agents.get(id);
     const acts = [];
-    acts.push(...installSkillTree(agents.resolveSkillDir(agent, ctx), id, vars, m, `repo:${id}`, options.force));
+    if (agent.skill && agent.skill.scope === 'repo') {
+      acts.push(...installSkillTree(agents.resolveSkillDir(agent, ctx), id, vars, m, `repo:${id}`, options.force));
+    }
     acts.push(...installCommands(agent, ctx, vars, m, 'repo', options.force));
     if (agent.extension) acts.push(...installGeminiExtension(agent, ctx, vars, m, 'repo', options.force));
     if (!options.skipRules) acts.push(installRulesBlock(agent, ctx, vars, m, 'repo', options.force));

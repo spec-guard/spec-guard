@@ -29,7 +29,7 @@ When you change any of these, enumerate and update every consumer:
 
 ## Dependency order
 
-Operate (build, test, migrate, commit) in dependency order — shared/core first, then the services that consume them, then the orchestration/backup layer. Reversing the order produces transient broken states and confusing test failures. The repo's commit/quality workflow encodes this order; follow it.
+Operate (build, test, migrate) in dependency order — shared/core first, then the services that consume them, then the orchestration/backup layer. Reversing the order produces transient broken states and confusing test failures. For commits, use the repo's configured module order; when dependency order matters, that configured order must encode it.
 
 ## Shared modules: don't fork, extend
 
@@ -60,7 +60,7 @@ Shipping the endpoint without 2–6 leaves the contract docs lying — a regress
 ## How to verify
 
 - [ ] Was every consumer of the changed enum / event / API / schema / VO enumerated before coding started? (No consumer discovered mid-implementation.)
-- [ ] Did commits happen in dependency order — shared/core first, then consumers, then orchestration? No consumer committed before its dependency.
+- [ ] Did commits follow the configured module order, and does that order encode dependency order where it matters? No consumer should be committed before its dependency.
 - [ ] For an API change: were all 6 fan-out targets updated? (endpoint + internal arch doc + customer docs + API client collection + SDK samples + changelog/error-code reference)
 - [ ] Was a single Verifier pass run after all parallel work to reconcile the contract across modules before commit?
 - [ ] If the change crossed repo boundaries: were all affected deliverable repos updated and committed individually — not lumped into the backup monorepo commit?

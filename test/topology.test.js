@@ -76,10 +76,12 @@ test('wall lint flags hyperlinks into privateDir + agent dirs at any depth, igno
   fs.writeFileSync(path.join(docs, 'bad1.md'), 'See [notes](.private/docs/x.md) and [skill](.claude/skills/y.md).\n');
   fs.writeFileSync(path.join(docs, 'reference', 'decisions', 'bad2.md'), 'See [notes](../../.private/docs/y.md).\n');
   fs.writeFileSync(path.join(docs, 'bad3.md'), 'See [gem](../.gemini/extensions/z.md).\n');
+  fs.writeFileSync(path.join(docs, 'bad-copilot.md'), 'See [copilot](.github/prompts/spec.prompt.md).\n');
+  fs.writeFileSync(path.join(docs, 'bad-opencode.md'), 'See [opencode](../.opencode/command/spec-sync.md).\n');
   const v = lint.lintRepo(d); // default privateDir .private
-  // bad1 (2 lines? one line, matches first) + bad2 + bad3 = 3 files flagged
   const files = new Set(v.map((x) => path.basename(x.file)));
   assert.ok(files.has('bad1.md') && files.has('bad2.md') && files.has('bad3.md'));
+  assert.ok(files.has('bad-copilot.md') && files.has('bad-opencode.md'));
   assert.ok(!files.has('ok.md'));
   // custom privateDir
   fs.writeFileSync(path.join(docs, 'bad4.md'), 'See [x](.ip/secret.md).\n');

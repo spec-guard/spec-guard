@@ -32,7 +32,9 @@
     "src/",
     "skill/",
     "templates/",
-    "schemas/"
+    "schemas/",
+    "docs/",
+    "CONTRIBUTING.md"
   ],
   "engines": {
     "node": ">=20"

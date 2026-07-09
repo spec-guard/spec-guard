@@ -6,10 +6,10 @@
 
 The original IP/deliverable wall equated "intellectual property" with the `.claude/` folder.
 But `.claude/` is **Claude Code's integration directory**, not a concept of ownership. A repo can
-use Claude Code, Codex, GitHub Copilot, and Gemini at once — each with its own dir (`.claude/`,
-`.codex/`/`AGENTS.md`, `.github/`, `.gemini/`). Putting the team's IP knowledge base (troubleshooting,
-action plans, audits, internal rationale, credentials) inside one agent's folder presumes a single
-agent and is invisible to the others' mental model.
+use Claude Code, Codex, GitHub Copilot, Gemini, and opencode/OpenWork at once — each with its own
+dir (`.claude/`, `.codex/`/`AGENTS.md`, `.github/`, `.gemini/`, `.opencode/`). Putting the team's IP
+knowledge base (troubleshooting, action plans, audits, internal rationale, credentials) inside one
+agent's folder presumes a single agent and is invisible to the others' mental model.
 
 ## Decision
 
@@ -19,8 +19,8 @@ Recognize **three** categories, not two:
 2. **IP knowledge base** → a **configurable, harness-agnostic** `privateDir` (default **`.private/`**),
    not shipped. Holds troubleshooting, action plans, audits, internal rationale, internal
    standards, agent templates, and credentials.
-3. **Per-agent integration** → each agent's own dir (`.claude/`, `.codex/`, `.github/`, `.gemini/`),
-   generated and gitignored in deliverables.
+3. **Per-agent integration** → each agent's own dir (`.claude/`, `.codex/`, `.github/`,
+   `.gemini/`, `.opencode/`), generated and gitignored in deliverables.
 
 The golden rule generalizes: **internal MAY reference `docs/`; `docs/` MUST NOT reference internal**,
 where "internal" = `privateDir` **and** any agent dir. The wall lint forbids `docs/` hyperlinks into

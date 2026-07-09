@@ -81,3 +81,23 @@ test('path resolvers honor repo vs home scope', () => {
     '/repo/.gemini/extensions/spec-guard/hooks/hooks.json'
   );
 });
+
+test('capabilityRows make necessary agent differences explicit', () => {
+  const rows = Object.fromEntries(agents.capabilityRows().map((row) => [row.id, row]));
+
+  assert.strictEqual(rows['claude-code'].support, 'complete');
+  assert.strictEqual(rows['claude-code'].sessionHooks, true);
+  assert.strictEqual(rows['claude-code'].skillScope, 'repo');
+
+  assert.strictEqual(rows.codex.support, 'partial');
+  assert.strictEqual(rows.codex.skillScope, 'home');
+  assert.strictEqual(rows.codex.commands, null);
+  assert.strictEqual(rows.codex.invocation, 'natural-language');
+
+  assert.strictEqual(rows['github-copilot'].support, 'instructional');
+  assert.strictEqual(rows['github-copilot'].sessionHooks, false);
+  assert.strictEqual(rows['github-copilot'].invocation, 'prompt-files');
+
+  assert.strictEqual(rows.gemini.hookScope, 'repo');
+  assert.strictEqual(rows.opencode.activation, 'project-memory');
+});

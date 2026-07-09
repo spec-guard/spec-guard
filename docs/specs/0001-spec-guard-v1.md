@@ -16,9 +16,9 @@ without losing the governance.
 
 - A Node/npm CLI `@spec-guard/cli` with `init`, `setup`, `self`, `status`, `doctor`,
   `toggle`, `on`, `off`, `uninstall` (per-repo + `--global`/`--purge`), `commit`, `migrate`, and `completion`.
-- Single-source skill + command set, **rendered per agent** for Claude Code, Codex,
-  GitHub Copilot, Gemini CLI, and opencode (skill, slash commands, lifecycle hooks, and a
-  managed rules-file block per agent).
+- Single-source governance, **rendered per agent** for Claude Code, Codex, GitHub Copilot,
+  Gemini CLI, and opencode using each supported surface: skills/rules blocks, commands or
+  prompt/custom command files where available, and lifecycle hooks where the agent supports them.
 - Decoupling from the `superpowers` folder convention via a configurable `${specDir}` /
   `${plansDir}` (default `docs/specs` / `docs/plans`).
 - Self-update (`self upgrade` for the binary; per-repo skill auto-updates at SessionStart)
@@ -48,18 +48,20 @@ of the nested-git-backup pattern. Full design: the approved plan and the ADRs be
 ## Acceptance Criteria
 
 1. `npx @spec-guard/cli init <dir> --agent claude-code,codex,github-copilot,gemini,opencode`
-   produces the per-agent skill/commands/rules-block at the matrix paths, and `specguard --version`
-   runs.
+   produces repo-scoped agent surfaces/rules blocks at the matrix paths; Codex `init` writes
+   `AGENTS.md`, while `setup` or `init --with-global` installs the Codex home skill/hooks.
+   `specguard --version` runs.
 2. `npm pack --dry-run` never includes `.claude/` (no IP leak in the tarball).
 3. The rendered skill contains no hardcoded `superpowers` path and no `superpowers:` strings;
    the configured `${specDir}` appears instead.
 4. `setup` over a settings file that already has co-tenant hooks leaves them
    byte-identical and produces exactly one spec-guard entry per lifecycle event (no
    double-injection).
-5. `doctor` reports repo topology and flags only real `.claude/` hyperlinks under `docs/`
-   (prose mentions are not violations).
-6. Re-rendering (`specguard init --force`) never overwrites a user-edited owned file (writes
-   a `.spec-guard-update` sidecar) and never touches `docs/specs` / `docs/plans`.
+5. `doctor` reports repo topology and flags only real `privateDir` or agent-directory hyperlinks
+   under `docs/` (prose mentions are not violations).
+6. Re-rendering without `--force` never overwrites a user-edited whole-file owned file (writes
+   a `.spec-guard-update` sidecar instead). `--force` intentionally overwrites managed files;
+   `docs/specs` / `docs/plans` remain user content and are never owned.
 
 ## Traceability
 
