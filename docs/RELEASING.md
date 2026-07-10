@@ -2,7 +2,10 @@
 
 Releases are automated by [release-please](https://github.com/googleapis/release-please):
 merging Conventional Commits to `main` opens/updates a Release PR; merging that PR cuts the
-tag + GitHub Release, which triggers `release.yml` to `npm publish`.
+tag + GitHub Release, and the same `release-please.yml` run then runs `npm publish` (a
+`GITHUB_TOKEN`-created release cannot trigger other workflows, so the publish is gated on
+`release_created` inside that workflow). `release.yml` remains a manual fallback
+(`gh workflow run release.yml`) to (re)publish whatever version is on `main`.
 
 ## One-time setup gates (must be done before the first `v0.1.0` publish)
 
