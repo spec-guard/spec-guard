@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.12](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.11...cli-v0.3.12) (2026-07-10)
+
+
+### Bug Fixes
+
+* ship CHANGELOG.md in the npm package ([d3ee119](https://github.com/spec-guard/spec-guard/commit/d3ee119f65ace143a2101920aea6a32a01b197d9))
+
 ## [0.3.11](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.10...cli-v0.3.11) (2026-07-10)
 
 
