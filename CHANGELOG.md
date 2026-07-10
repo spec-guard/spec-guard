@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.11](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.10...cli-v0.3.11) (2026-07-10)
+
+
+### Features
+
+* clarify agent support capabilities ([8c69797](https://github.com/spec-guard/spec-guard/commit/8c69797f277d80eb22de0cb0ad24d162fedaafda))
+
+
+### Bug Fixes
+
+* github-copilot overlay missing spec-commit and umbrella commands ([be9290f](https://github.com/spec-guard/spec-guard/commit/be9290f3ca616c3d98d71028b62d7b807093c05a))
+* harden self-upgrade guard, init wiring gate, and codex stop hook edge ([4835c28](https://github.com/spec-guard/spec-guard/commit/4835c289837aae7b8325a335841871d36295d6e6))
+
 ## [0.3.10](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.9...cli-v0.3.10) (2026-06-25)
 
 
