@@ -61,6 +61,18 @@ test('renderCommand routes the umbrella (/spec) to the namespace root per format
   assert.ok(!orient.umbrella);
 });
 
+// Regression: the copilot overlay once advertised only 5 of the 7 generated prompt files
+// (spec-commit and the spec.prompt.md umbrella were missing). The overlay must mention every
+// prompt file the installer actually writes.
+test('github-copilot overlay advertises the umbrella and every generated prompt file', () => {
+  const overlay = render.renderSkill('github-copilot', { specDir: 'docs/specs', plansDir: 'docs/plans' });
+  for (const tpl of render.listCommandTemplates()) {
+    const out = render.renderCommand(tpl, 'copilot-prompt', {});
+    const needle = out.umbrella ? out.filename : out.filename.replace(/\.prompt\.md$/, '');
+    assert.ok(overlay.includes(needle), `overlay must mention ${needle}`);
+  }
+});
+
 test('all agents are known and parseAgentList validates', () => {
   assert.deepStrictEqual(agents.listAgents().sort(), ['claude-code', 'codex', 'gemini', 'github-copilot', 'opencode']);
   assert.deepStrictEqual(

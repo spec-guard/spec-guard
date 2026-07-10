@@ -139,8 +139,10 @@ function upgrade(flags) {
   const home = homeDir(flags);
   const machineWired = Object.keys(manifest.load(globalManifestPath(home)).files || {}).length > 0;
   let refreshed = false;
+  // Honor the manifest guard: without --force, user-edited machine-owned files get a
+  // `.spec-guard-update` sidecar instead of being clobbered (`doctor` then flags the stale bundle).
   if ((changed || force) && machineWired) {
-    const res = deps.refreshMachine(home, { force: true });
+    const res = deps.refreshMachine(home, { force });
     refreshed = true;
     if (res && res.missing && res.missing.length) {
       process.stderr.write('specguard self: machine refresh incomplete — missing:\n  ' + res.missing.join('\n  ') + '\n');

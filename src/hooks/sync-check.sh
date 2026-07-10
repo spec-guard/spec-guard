@@ -25,6 +25,10 @@ case "$SCRIPT_PATH" in
 esac
 
 if ! git -C "$PROJECT_DIR" rev-parse --git-dir > /dev/null 2>&1; then
+  # Codex parses hook stdout as JSON; even the nothing-to-do path must emit a JSON object.
+  if [ "$HOOK_FORMAT" = "codex-json" ] || [ "$HOOK_FORMAT" = "codex-silent" ]; then
+    printf '%s\n' '{}'
+  fi
   exit 0
 fi
 

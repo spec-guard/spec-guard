@@ -118,7 +118,7 @@ specguard setup                                                       # (re)wire
    | Codex | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs" |
    | GitHub Copilot | `#spec.prompt.md` (umbrella) + prompt files: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
    | Gemini CLI | Same slash commands as Claude Code |
-   | opencode (+ OpenWork) | `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
+   | opencode (+ OpenWork) | `/spec` (umbrella) + `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
 
 4. **Turn it off / on** anytime: `specguard off` / `specguard on` (persists across sessions).
 5. **Something not working?** `specguard doctor` checks install health, repo topology, and the
@@ -199,7 +199,7 @@ For the full support matrix, install paths, verification steps, and troubleshoot
 | Codex | `~/.codex/skills/` | — (natural language) | `AGENTS.md` |
 | GitHub Copilot | `.github/skills/` | `.github/prompts/spec-*.prompt.md` | `.github/copilot-instructions.md` |
 | Gemini CLI | `.gemini/extensions/` | `…/commands/spec/*.toml` + `spec.toml` | `GEMINI.md` |
-| opencode (+ OpenWork) | `.opencode/skill/` | `.opencode/command/spec-*.md` | `AGENTS.md` |
+| opencode (+ OpenWork) | `.opencode/skill/` | `.opencode/command/spec-*.md` + `spec.md` (umbrella) | `AGENTS.md` |
 
 **Activation and invocation:**
 
@@ -209,7 +209,7 @@ For the full support matrix, install paths, verification steps, and troubleshoot
 | Codex | SessionStart hook → `~/.codex/hooks.json` | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs" |
 | GitHub Copilot | Always-on via `.github/copilot-instructions.md` (no hook) | `#spec.prompt.md` (umbrella) + prompt files: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
 | Gemini CLI | Extension hooks → `.gemini/extensions/spec-guard/hooks/hooks.json` | Same slash commands as Claude Code |
-| opencode (+ OpenWork) | Always-on via `AGENTS.md`; OpenWork shares the same config automatically | `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
+| opencode (+ OpenWork) | Always-on via `AGENTS.md`; OpenWork shares the same config automatically | `/spec` (umbrella) + `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
 
 ## Commands
 

@@ -67,10 +67,15 @@ function reportDiverged(summary) {
 // First-run convenience: wire this machine's session hooks (the `setup` step) without a second
 // command. Honors --with-global / --no-global; otherwise offers it interactively on a TTY.
 async function maybeWireMachine(flags, home, agentList) {
-  const needGlobal = agentList.some((id) => id === 'claude-code' || id === 'codex');
-  if (!needGlobal) return;
+  const needGlobal = agentList.filter((id) => id === 'claude-code' || id === 'codex');
+  if (!needGlobal.length) return;
   const globalM = manifest.load(globalManifestPath(home));
-  if (!flags['with-global'] && Object.keys(globalM.files || {}).length > 0) {
+  // "Already wired" must hold for every hook-bearing agent being initialized — a manifest that
+  // only covers claude-code must not skip (and mislead about) a codex init.
+  const allWired = needGlobal.every((id) =>
+    Object.keys(globalM.files || {}).some((k) => k.startsWith(`global:${id}:`))
+  );
+  if (!flags['with-global'] && allWired) {
     // Already wired on this machine — say so instead of skipping silently.
     process.stdout.write("  machine hooks already wired (run 'specguard setup' to refresh them).\n");
     return;

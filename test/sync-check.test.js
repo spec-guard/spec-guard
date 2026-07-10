@@ -63,3 +63,21 @@ test('sync-check auto-detects Codex-installed path and emits only JSON on stdout
     fs.rmSync(installedRoot, { recursive: true, force: true });
   }
 });
+
+// Regression: the not-a-git-repo early exit ran before the format-aware output block, so Codex
+// mode got empty stdout instead of the JSON object its hook consumer expects.
+test('sync-check emits empty JSON in Codex mode even outside a git repo', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-nogit-'));
+  try {
+    const r = spawnSync('bash', [SCRIPT], {
+      cwd: dir,
+      encoding: 'utf8',
+      env: Object.assign({}, process.env, { SPEC_GUARD_HOOK_FORMAT: 'codex-silent', CLAUDE_CWD: dir }),
+    });
+    assert.strictEqual(r.status, 0);
+    assert.deepStrictEqual(JSON.parse(r.stdout), {});
+    assert.strictEqual(r.stderr, '');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

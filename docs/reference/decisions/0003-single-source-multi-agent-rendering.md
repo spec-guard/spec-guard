@@ -27,7 +27,7 @@ Per-agent targets:
 | codex | `~/.codex/skills/spec-guard/` (owned by `setup`) | — (natural language only) | `~/.codex/hooks.json` | `AGENTS.md` |
 | github-copilot | `.github/skills/spec-guard/` | `.github/prompts/spec-*.prompt.md` | — (project instructions / prompt files) | `.github/copilot-instructions.md` |
 | gemini | `.gemini/extensions/spec-guard/skills/…` | `…/commands/spec/*.toml` | extension `hooks/hooks.json` | `GEMINI.md` |
-| opencode | `.opencode/skill/spec-guard/` | `.opencode/command/spec-*.md` | — (AGENTS.md project memory) | `AGENTS.md` |
+| opencode | `.opencode/skill/spec-guard/` | `.opencode/command/spec-*.md` + `spec.md` (umbrella) | — (AGENTS.md project memory) | `AGENTS.md` |
 
 **OpenWork** (different-ai/openwork) is a desktop control surface **powered by opencode** and
 shares its conventions (`AGENTS.md` + `.opencode/`) — so the `opencode` row covers it; no separate

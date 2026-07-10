@@ -54,8 +54,9 @@ function stub(overrides) {
       return { status: overrides.installStatus != null ? overrides.installStatus : 0, stdout: '', stderr: '' };
     },
     installedVersion: () => overrides.installed,
-    refreshMachine: () => {
+    refreshMachine: (home, opts) => {
       calls.refresh++;
+      calls.refreshOpts = opts;
       return { wired: [], missing: [], changed: true };
     },
     // Keep dry-run hermetic: never spawn the real `gh`.
@@ -98,6 +99,7 @@ test('self upgrade --force reinstalls the same version (and refreshes a wired ma
   assert.match(out, /reinstalled/);
   assert.strictEqual(calls.install, 1);
   assert.strictEqual(calls.refresh, 1, '--force should refresh the machine when it is wired');
+  assert.strictEqual(calls.refreshOpts.force, true, '--force must propagate to the machine refresh');
 });
 
 test('self upgrade to a newer version installs, refreshes a wired machine, and nudges to auto-update repos', () => {
@@ -110,6 +112,9 @@ test('self upgrade to a newer version installs, refreshes a wired machine, and n
   assert.match(out, /auto-update/);
   assert.strictEqual(calls.install, 1);
   assert.strictEqual(calls.refresh, 1);
+  // Regression: the refresh once hardcoded force, clobbering user-edited machine-owned files
+  // without the promised `.spec-guard-update` sidecar.
+  assert.strictEqual(calls.refreshOpts.force, false, 'plain upgrade must keep the manifest guard');
 });
 
 test('self upgrade does NOT wire a machine that was never set up (CLI-only / --no-global users)', () => {

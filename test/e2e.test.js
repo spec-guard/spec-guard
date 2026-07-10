@@ -244,6 +244,31 @@ test('init --with-global refreshes machine wiring even when the global manifest 
   }
 });
 
+// Regression: the "already wired" gate only checked that the global manifest was non-empty, so a
+// claude-code-only manifest made `init --agent codex` (no flag) claim the machine was wired and
+// skip the setup pointer for the genuinely-unwired agent.
+test('init without --with-global does not claim "already wired" for an unwired agent', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    fs.mkdirSync(path.join(home, '.config/spec-guard'), { recursive: true });
+    fs.writeFileSync(
+      path.join(home, '.config/spec-guard/manifest.json'),
+      JSON.stringify({ version: 1, files: { 'global:claude-code:hooks:hookbundle:activate.js': { hash: 'old' } } }, null, 2) + '\n'
+    );
+
+    const out = sg(home, ['init', repo, '--agent', 'codex']);
+    assert.doesNotMatch(out, /already wired/, 'a claude-only manifest must not read as wired for codex');
+    assert.match(out, /run 'specguard setup'/, 'must point at setup for the missing codex wiring');
+    assert.ok(!fs.existsSync(path.join(home, '.codex/skills/spec-guard/SKILL.md')),
+      'non-interactive init must still never wire the machine silently');
+
+    const out2 = sg(home, ['init', repo, '--agent', 'claude-code']);
+    assert.match(out2, /already wired/, 'agents covered by the manifest still report already wired');
+  } finally {
+    cleanup();
+  }
+});
+
 test('init --with-global wires the machine in one shot (no separate setup)', () => {
   const { home, repo, cleanup } = sandbox();
   try {
