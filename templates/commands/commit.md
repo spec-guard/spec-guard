@@ -27,7 +27,14 @@ Run the SYNC/commit step. The message is authored by you; `specguard commit` enf
      your code (`--add` / `git add` below covers it). Only then proceed to the commit.
 1. Review the staged/changed work and draft a **Conventional Commit** message
    (`feat|fix|chore|docs|refactor|test|perf|build|ci|style|revert: subject`), in the repo's
-   configured commit language (`commitLanguage`, default English). Body explains the *why*.
+   configured commit language (`commitLanguage`, default English).
+   - **Title mood** depends on `commitLanguage`: English (default) uses imperative present tense
+     (`fix: correct the off-by-one`), the standard Conventional Commits convention. Portuguese
+     (`commitLanguage: "pt"`) never uses the infinitive — use a noun phrase or past participle
+     instead (`fix: correção do off-by-one`, not `fix: corrigir o off-by-one`;
+     `feat: adição de X`, not `feat: adicionar X`).
+   - **Body** is a bulleted list (`-` per line), one bullet per distinct change, each explaining
+     the *why* — not a prose paragraph.
    **Never** add AI attribution (no "Co-Authored-By", no "Generated with…", no session links).
 2. Commit (this stages the refreshed graphs together with the code):
    - Single repo:        `specguard commit --add --message "<type>: <subject>"`
