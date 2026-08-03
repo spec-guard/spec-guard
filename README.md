@@ -44,10 +44,11 @@ spec-guard makes different bets:
 
 So yes — **multi-module/multi-repo awareness is one real differentiator** (confirmed: see
 [ADR 0009](docs/reference/decisions/0009-graph-topology-and-ip-firewall.md)), but it's not the only
-one. The bigger one is that spec-guard doesn't wait for you to remember to run it — and it comes
-with an opinion about keeping your internal notes out of what you ship, which the scaffolding tools
-don't touch at all. See [ADR 0007](docs/reference/decisions/0007-binary-name-and-single-front-door.md)
-for the full reasoning.
+one. The bigger one is that spec-guard doesn't wait for you to remember to run it — see
+[ADR 0007](docs/reference/decisions/0007-binary-name-and-single-front-door.md) for the reasoning
+against Spec Kit and OpenSpec specifically. It also comes with an opinion about keeping your
+internal notes out of what you ship, which the scaffolding tools don't touch at all — see
+[ADR 0006](docs/reference/decisions/0006-harness-agnostic-ip.md) for that one.
 
 ## What it gives you
 

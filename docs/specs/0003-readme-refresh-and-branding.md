@@ -12,9 +12,10 @@ OpenSpec in one line without backing it up anywhere a reader can quickly scan.
 
 ## In-Scope
 
-- A minimal SVG wordmark/logo, committed to the repo, referenced at the top of the README via a
-  relative path (renders on GitHub and, via npm's README image-URL rewrite for GitHub-hosted
-  packages, on the npm listing too).
+- A minimal SVG wordmark/logo, committed to the repo (`docs/assets/logo.svg`), referenced at the top
+  of the README via an **absolute** `raw.githubusercontent.com` URL rather than a relative path.
+  npm's relative-path rewrite for GitHub-hosted packages is documented as unreliable (npm/marky-markdown#432)
+  — the absolute URL renders correctly on both GitHub and the npm listing without depending on it.
 - A rewritten README narrative voice: friendlier and more direct, still professional/technical —
   no change to factual claims about commands, flags, or behavior.
 - A dedicated, evidence-based "vs Spec Kit / OpenSpec" comparison section placed near the top,
@@ -32,7 +33,9 @@ OpenSpec in one line without backing it up anywhere a reader can quickly scan.
 
 ## Acceptance Criteria
 
-1. `README.md` renders a logo at the top via a relative image path that resolves on GitHub.
+1. `README.md` renders a logo at the top via an image URL that resolves correctly on both GitHub
+   and the npm listing (absolute `raw.githubusercontent.com`, chosen over a relative path for
+   reliability — see In-Scope).
 2. A comparison section names GitHub Spec Kit and OpenSpec and states differentiators that are
    traceable to ADR 0007 (and are independently consistent with each tool's own public
    documentation, checked via web search on 2026-08-03).
