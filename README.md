@@ -39,7 +39,7 @@ spec-guard makes different bets:
 | **How it activates** | You run it — easy to skip under a deadline | Session lifecycle hooks (where the agent supports them) inject the loop automatically; no command to remember |
 | **Agent coverage** | Broad — templates for a long list of editors/agents | Deep on 5: Claude Code, Codex, GitHub Copilot, Gemini CLI, opencode (+ OpenWork) — each wired to its *real* integration surface (hooks, statusline, project memory), not a one-size template. A [capability matrix](docs/reference/decisions/0010-agent-capability-matrix.md) tells you honestly what each agent can and can't do, instead of pretending they're equivalent |
 | **Multi-repo awareness** | Single repo | Understands a workspace that's actually N delivered repos plus a private backup monorepo, and reasons about contract ripple + commit order across repo boundaries |
-| **IP vs. deliverable** | Not addressed | A real wall between what ships to the client (`docs/`) and your internal know-how (`.private/`) — agnostic to whichever agent wrote it, linted by `doctor` |
+| **Intellectual property (IP) vs. deliverable** | Not addressed | A real wall between what ships to the client (`docs/`) and your internal know-how (`.private/`) — agnostic to whichever agent wrote it, linted by `doctor` |
 | **Re-running / updating** | — | Manifest-guarded: hand-edits to owned files are never clobbered — a `.spec-guard-update` sidecar is written instead. (Edits *inside* the managed block are the one exception: that region always re-syncs to the template, by design) |
 
 So yes — **multi-module/multi-repo awareness is one real differentiator** (confirmed: see

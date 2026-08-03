@@ -11,8 +11,8 @@ spec-guard dogfoods its own governance: changes follow the spec-driven loop
   (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`…). A `feat:` bumps minor,
   `fix:` bumps patch, `feat!:`/`BREAKING CHANGE:` bumps major.
 - **Tests.** `npm test` (Node's built-in test runner) must pass. New behavior ships with a test.
-- **The IP wall.** Deliverable docs live in `docs/`; internal notes never ship and are
-  gitignored. `docs/` must never link into ignored paths.
+- **The IP (intellectual property) wall.** Deliverable docs live in `docs/`; internal notes never
+  ship and are gitignored. `docs/` must never link into ignored paths.
 
 ## Local development
 

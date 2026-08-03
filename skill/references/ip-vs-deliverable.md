@@ -1,6 +1,8 @@
 # IP vs Deliverable Documentation
 
-In a project that ships its repos to a client, content splits by **audience**, not by tool.
+**IP** here means **intellectual property**: your team's internal know-how (troubleshooting
+playbooks, action plans, audits, rationale, credentials) — the stuff you keep, not the stuff you
+ship. In a project that ships its repos to a client, content splits by **audience**, not by tool.
 Putting something in the wrong place either leaks know-how or strands the client without an
 answer. Get the classification right *before* writing.
 
