@@ -336,13 +336,14 @@ Nothing here should ever eat your edits. That's not a promise, it's how it's bui
   "specDir": "docs/specs",
   "plansDir": "docs/plans",
   "privateDir": ".private",
-  "commitLanguage": "en",
   "agents": ["claude-code", "codex"]
 }
 ```
 
-You normally don't edit this by hand — `init` writes it from your flags. If you do change a value,
-re-run `specguard init` to re-render the owned files against it.
+You normally don't edit this by hand — `init` writes it from your flags. A few settings (like
+`commitLanguage`, default `"en"`, used by `specguard commit`) aren't written by `init` and only take
+effect if you add them yourself. If you do change a value, re-run `specguard init` to re-render the
+owned files against it.
 
 ## Migrating an existing repo
 
