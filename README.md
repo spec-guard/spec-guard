@@ -263,7 +263,7 @@ Run `specguard <command> --help` for per-command usage, subcommands, and flags.
 
 | Flag | Applies to | Meaning |
 |------|------------|---------|
-| `--agent <list>` | `init`, `uninstall` | Comma-separated agents, or `all` / `none` (default on a TTY: prompt; else `claude-code`) |
+| `--agent <list>` | `init`, `uninstall` | Comma-separated agents, or `all` / `none` (default on a TTY: prompt; else `claude-code`). On an already-initialized repo, `init --agent` **adds/refreshes** the named agent(s) — it never drops one you didn't name. To remove an agent, use `uninstall --agent <x>` instead (see [Uninstall](#uninstall)) |
 | `--with-global` / `--no-global` | `init` | Wire (or skip) this machine's hooks without prompting |
 | `--scaffold` | `init` | Also create the `docs/` + `.private/` doc tree **and seed fill-in starter docs** (architecture, error-handling, schema, observability, coding-guidelines) — all write-if-absent. Each convention doc is single-source: on a brownfield repo, replace any that duplicates an existing doc with a one-line pointer (`doctor` flags unfilled ones) |
 | `--spec-dir` / `--plans-dir` | `init` | Override repo rules and repo-scoped generated files (default `docs/specs`, `docs/plans`); Codex's home skill remains global and should defer to `AGENTS.md` for repo-specific paths |
@@ -287,12 +287,16 @@ the region between the `<!-- spec-guard:start -->` / `<!-- spec-guard:end -->` m
 preserving your surrounding content. If spec-guard's block was the file's *only* content (e.g. a
 plain `init .` with no pre-existing rules file), the now-empty file is removed too.
 
+**This is also how you shrink the agent list.** `init` only ever adds or refreshes agents (see the
+`--agent` row above) — the one command that removes an agent, both its files *and* its entry in
+`.spec-guard/config.json`, is a scoped `uninstall --agent <x>`:
+
 **From a project:**
 
 ```bash
 specguard uninstall .              # remove skill, commands, managed block, .spec-guard/
 specguard uninstall . --dry-run    # preview exactly what would be removed
-specguard uninstall . --agent gemini   # remove only one agent's integration
+specguard uninstall . --agent gemini   # remove one agent's files AND drop it from config.json
 ```
 
 **From your workstation (the global install):**

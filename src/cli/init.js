@@ -115,11 +115,15 @@ async function run(args) {
     return 1;
   }
 
-  // Re-init never shrinks the configured agent set (ADR 0011) — union with what's already there.
-  // Removing an agent is `uninstall --agent <x>`'s job, not init's.
+  // Re-init never shrinks the configured agent set, and a bare re-init (no explicit --agent, no
+  // TTY to ask) must not silently GROW it with the non-interactive default either (ADR 0011):
+  // that default reflects no real user intent, so it just re-syncs what's already configured.
+  // An explicit --agent, or an interactively-typed prompt answer, IS real intent and unions with
+  // what's already there. Removing an agent stays `uninstall --agent <x>`'s job, not init's.
   if (alreadyInit) {
     const existingAgents = config.resolveRepoSettings(repoRoot).agents;
-    agentList = Array.from(new Set([...existingAgents, ...agentList]));
+    const silentDefault = !flags.agent && !process.stdin.isTTY;
+    agentList = silentDefault ? existingAgents : Array.from(new Set([...existingAgents, ...agentList]));
   }
 
   const specDir = (typeof flags['spec-dir'] === 'string' && flags['spec-dir']) || 'docs/specs';

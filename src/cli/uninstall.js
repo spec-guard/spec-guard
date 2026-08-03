@@ -117,7 +117,19 @@ function runRepo(flags, positionals) {
   }
 
   // Drop the repo control dir (config + manifest) unless scoping to a subset of agents.
-  if (!flags.agent) rmDir(path.join(repoRoot, '.spec-guard'), plan, dry);
+  if (!flags.agent) {
+    rmDir(path.join(repoRoot, '.spec-guard'), plan, dry);
+  } else {
+    // Scoped uninstall: the control dir stays, so config.json's `agents` must drop the ones
+    // just removed — otherwise it keeps claiming an agent is installed after its files are gone
+    // (this is `init`'s narrowing counterpart: ADR 0011 makes that command grow-only specifically
+    // because removal is this path's job).
+    const remaining = (settings.agents || []).filter((id) => !agentList.includes(id));
+    if (remaining.length !== (settings.agents || []).length) {
+      plan.push(`update .spec-guard/config.json  agents: [${remaining.join(', ') || '(none)'}]`);
+      if (!dry) config.writeRepoConfig(repoRoot, { agents: remaining });
+    }
+  }
 
   process.stdout.write(`specguard: uninstall ${dry ? '(dry-run) ' : ''}from ${repoRoot}\n`);
   process.stdout.write(plan.length ? '  ' + plan.join('\n  ') + '\n' : '  nothing to remove (not installed?)\n');

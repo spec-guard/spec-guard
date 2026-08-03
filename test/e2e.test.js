@@ -225,6 +225,20 @@ test('re-init with a different --agent unions with the existing config, never sh
   }
 });
 
+test('a bare non-interactive re-init does not silently add the claude-code default', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'codex']);
+    // No --agent this time, and no TTY (this is `execFileSync`) — must re-sync `codex` only,
+    // never grow in claude-code as a side effect of the silent non-interactive default.
+    sg(home, ['init', repo]);
+    const cfg = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.deepStrictEqual(cfg.agents, ['codex'], 'bare re-init must not add the claude-code default');
+  } finally {
+    cleanup();
+  }
+});
+
 test('a fresh init is unaffected by the re-init merge (agents = exactly what was resolved)', () => {
   const { home, repo, cleanup } = sandbox();
   try {
@@ -467,6 +481,44 @@ test('uninstall removes owned files, strips the rules block, and keeps user cont
 
     // user docs untouched
     assert.ok(fs.existsSync(path.join(repo, 'docs/specs/0001-mine.md')), 'user spec preserved');
+  } finally {
+    cleanup();
+  }
+});
+
+test('uninstall --agent <x> removes that agent from config.json too, not just its files', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code,codex,gemini']);
+
+    sg(home, ['uninstall', repo, '--agent', 'gemini']);
+
+    assert.ok(!fs.existsSync(path.join(repo, '.gemini/extensions/spec-guard')), 'gemini files removed');
+    assert.ok(fs.existsSync(path.join(repo, '.spec-guard/config.json')), 'control dir kept for a scoped uninstall');
+    const cfg = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.deepStrictEqual(cfg.agents.slice().sort(), ['claude-code', 'codex'],
+      'gemini must be dropped from config.agents, not just have its files removed');
+
+    // doctor's repo line reflects config.agents directly; the untouched agents stay configured
+    const d = sgStatus(home, ['doctor', repo]);
+    assert.match(d.stdout, /agents=claude-code,codex\)/);
+    assert.doesNotMatch(d.stdout, /gemini/, 'doctor should no longer even mention the removed agent');
+  } finally {
+    cleanup();
+  }
+});
+
+test('uninstall --agent <x> --dry-run previews the config.json update without writing it', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code,gemini']);
+    const before = fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8');
+
+    const out = sg(home, ['uninstall', repo, '--agent', 'gemini', '--dry-run']);
+    assert.match(out, /agents: \[claude-code\]/);
+
+    assert.strictEqual(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'), before, 'dry-run must not write');
+    assert.ok(fs.existsSync(path.join(repo, '.gemini/extensions/spec-guard')), 'dry-run must not remove files either');
   } finally {
     cleanup();
   }
