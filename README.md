@@ -1,24 +1,53 @@
-# spec-guard
+<p align="center">
+  <img src="https://raw.githubusercontent.com/spec-guard/spec-guard/main/docs/assets/logo.svg" alt="spec-guard" width="420">
+</p>
 
-[![npm](https://img.shields.io/npm/v/@spec-guard/cli.svg)](https://www.npmjs.com/package/@spec-guard/cli)
-[![CI](https://github.com/spec-guard/spec-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/spec-guard/spec-guard/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](package.json)
+<p align="center">
+  <a href="https://www.npmjs.com/package/@spec-guard/cli"><img src="https://img.shields.io/npm/v/@spec-guard/cli.svg" alt="npm"></a>
+  <a href="https://github.com/spec-guard/spec-guard/actions/workflows/ci.yml"><img src="https://github.com/spec-guard/spec-guard/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg" alt="node"></a>
+</p>
 
-> **Context before code. Spec before edits. Verify against the spec, not the vibe.**
+<p align="center"><strong>Context before code. Spec before edits. Verify against the spec, not the vibe.</strong></p>
 
-`spec-guard` is a front-of-pipeline **governance** layer for spec-driven development with AI
-coding agents — in large, multi-module, multi-repo codebases. It installs as an always-on skill
-plus the command, prompt, project-memory, and lifecycle-hook surfaces each agent actually supports
-for **Claude Code, Codex, GitHub Copilot, Gemini CLI, and opencode** (incl. OpenWork), all rendered
-from a single source.
+Ever watched a coding agent "fix" one endpoint and quietly break three things it didn't know
+existed? That's the moment spec-guard exists to prevent. It's a **governance layer** that sits in
+front of your AI coding agent — Claude Code, Codex, GitHub Copilot, Gemini CLI, or opencode — and
+makes it read the docs and write a spec *before* touching code, then check its own work against
+that spec instead of vibes. Install it once and it's just... always on, every session, no command
+to remember.
 
-Where GitHub **Spec Kit** and **OpenSpec** give you the *mechanics* of spec-driven development
-(scaffolding, slash commands), spec-guard adds the *governance* they lack — and brings the
-mechanics along too.
+> **Naming, so it's not confusing:** the npm package is **`@spec-guard/cli`**, the command you type
+> is **`specguard`** (one word, no hyphen), and the project/brand is **spec-guard**.
 
-> **Naming:** the npm package is **`@spec-guard/cli`**, the command you run is **`specguard`**
-> (one word, no hyphen), and the project/brand is **spec-guard**.
+## spec-guard vs. Spec Kit / OpenSpec — what's actually different?
+
+Short version: **Spec Kit and OpenSpec give you the paperwork. spec-guard makes sure it gets read.**
+
+Both are good tools and worth knowing about — GitHub **Spec Kit** (`specify`) scaffolds a
+Spec → Plan → Tasks → Implement chain of markdown artifacts across a long list of editors/agents;
+**OpenSpec** (`openspec`) does a similar job with a lighter Proposals → Specs → Tasks → Archive
+flow. Both are things *you run*, and both assume "many agents" means "roughly the same experience
+everywhere."
+
+spec-guard makes different bets:
+
+| | Spec Kit / OpenSpec | spec-guard |
+|---|---|---|
+| **What you get** | Scaffolding: spec/plan/task files you and the agent fill in | The same discipline, but *enforced* — the agent is made to read the governing docs before it edits, every time |
+| **How it activates** | You run it — easy to skip under a deadline | Session lifecycle hooks (where the agent supports them) inject the loop automatically; no command to remember |
+| **Agent coverage** | Broad — templates for a long list of editors/agents | Deep on 5: Claude Code, Codex, GitHub Copilot, Gemini CLI, opencode (+ OpenWork) — each wired to its *real* integration surface (hooks, statusline, project memory), not a one-size template. A [capability matrix](docs/reference/decisions/0010-agent-capability-matrix.md) tells you honestly what each agent can and can't do, instead of pretending they're equivalent |
+| **Multi-repo awareness** | Single repo | Understands a workspace that's actually N delivered repos plus a private backup monorepo, and reasons about contract ripple + commit order across repo boundaries |
+| **IP vs. deliverable** | Not addressed | A real wall between what ships to the client (`docs/`) and your internal know-how (`.private/`) — agnostic to whichever agent wrote it, linted by `doctor` |
+| **Re-running / updating** | — | Manifest-guarded: your hand-edits are never clobbered, a `.spec-guard-update` sidecar is written next to the changed file instead |
+
+So yes — **multi-module/multi-repo awareness is one real differentiator** (confirmed: see
+[ADR 0009](docs/reference/decisions/0009-graph-topology-and-ip-firewall.md)), but it's not the only
+one. The bigger one is that spec-guard doesn't wait for you to remember to run it — and it comes
+with an opinion about keeping your internal notes out of what you ship, which the scaffolding tools
+don't touch at all. See [ADR 0007](docs/reference/decisions/0007-binary-name-and-single-front-door.md)
+for the full reasoning.
 
 ## What it gives you
 
@@ -48,16 +77,18 @@ mechanics along too.
 
 ## Do I need the advanced parts?
 
-**Most users have one repo: just `specguard init .` and use the loop — you're done.** The
-governance (read-docs-first, spec-before-edits, verify-against-spec) works out of the box.
+**Probably not, and that's fine.** Most users have one repo: run `specguard init .`, let the loop
+do its thing, and you're done. The core governance (read-docs-first, spec-before-edits,
+verify-against-spec) works out of the box, no configuration required.
 
-The heavier features are **opt-in** and aimed at teams shipping deliverable repos to a client:
+The heavier features are **opt-in**, aimed at teams shipping deliverable repos to a client:
 
 - the **IP/deliverable wall** (`.private/`) matters when you keep internal notes you must *not* ship;
 - the **backup-monorepo / multi-git** intelligence (`--scope all`, `commit --all`) matters when one
   workspace holds N separate git repos delivered separately.
 
-If neither applies to you, you can ignore `.private/`, `--scope`, and `--all` entirely.
+If neither applies to you, ignore `.private/`, `--scope`, and `--all` entirely — they won't get in
+your way.
 
 ## Requirements
 
@@ -281,6 +312,8 @@ Co-tenant hooks (e.g. other tools wired into the same `settings.json`) are match
 
 ## Safety model
 
+Nothing here should ever eat your edits. That's not a promise, it's how it's built:
+
 - **Manifest-guarded writes.** Each installed file is recorded with a content hash in
   `.spec-guard/manifest.json` (per repo) or `~/.config/spec-guard/manifest.json` (global). On
   `init` (without `--force`), an unchanged file is left as-is; a file you edited is left in place
@@ -319,13 +352,15 @@ specguard migrate --apply    # move .claude IP -> .private, docs/superpowers -> 
 
 ## Contributing
 
-Issues and PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the dev loop (`npm test` runs
+Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for the dev loop (`npm test` runs
 the suite) and [docs/RELEASING.md](docs/RELEASING.md) for the release process (release-please).
 
 ## Status
 
-Early (`v0.x`). Built and dogfooded on itself. See [`docs/specs/`](docs/specs/) for the living
-spec and [`docs/reference/decisions/`](docs/reference/decisions/) for the ADRs.
+Early (`v0.x`), and yes, we eat our own dog food: this repo runs its own governance loop, and this
+README was written under it (see [`docs/specs/0003`](docs/specs/0003-readme-refresh-and-branding.md)).
+Browse [`docs/specs/`](docs/specs/) for the living spec and
+[`docs/reference/decisions/`](docs/reference/decisions/) for the full ADR trail.
 
 ## License
 

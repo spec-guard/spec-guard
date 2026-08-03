@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="spec-guard icon">
+  <title>spec-guard</title>
+  <polygon points="64,16 112,44 112,100 64,128 16,100 16,44" fill="#4F46E5"/>
+  <polyline points="40,72 58,90 92,52" fill="none" stroke="#FFFFFF" stroke-width="12"
+    stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

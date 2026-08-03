@@ -9,6 +9,7 @@ Status). Paired implementation plans live in [`../plans/`](../plans/); formal de
 |------|--------|
 | [0001 — spec-guard v1](0001-spec-guard-v1.md) | APPROVED |
 | [0002 — Agent support UX audit](0002-agent-support-ux-audit.md) | IMPLEMENTED |
+| [0003 — README refresh and minimal branding](0003-readme-refresh-and-branding.md) | IMPLEMENTED |
 
 **Status legend:** `PROPOSED` → `APPROVED` → `IMPLEMENTED` → `SUPERSEDED`.
 
