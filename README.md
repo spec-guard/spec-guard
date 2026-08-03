@@ -40,7 +40,7 @@ spec-guard makes different bets:
 | **Agent coverage** | Broad — templates for a long list of editors/agents | Deep on 5: Claude Code, Codex, GitHub Copilot, Gemini CLI, opencode (+ OpenWork) — each wired to its *real* integration surface (hooks, statusline, project memory), not a one-size template. A [capability matrix](docs/reference/decisions/0010-agent-capability-matrix.md) tells you honestly what each agent can and can't do, instead of pretending they're equivalent |
 | **Multi-repo awareness** | Single repo | Understands a workspace that's actually N delivered repos plus a private backup monorepo, and reasons about contract ripple + commit order across repo boundaries |
 | **IP vs. deliverable** | Not addressed | A real wall between what ships to the client (`docs/`) and your internal know-how (`.private/`) — agnostic to whichever agent wrote it, linted by `doctor` |
-| **Re-running / updating** | — | Manifest-guarded: hand-edits to owned files are never clobbered — a `.spec-guard-update` sidecar is written instead. (Edits *inside* the managed rules-block are the one exception: that region always re-syncs to the template, by design) |
+| **Re-running / updating** | — | Manifest-guarded: hand-edits to owned files are never clobbered — a `.spec-guard-update` sidecar is written instead. (Edits *inside* the managed block are the one exception: that region always re-syncs to the template, by design) |
 
 So yes — **multi-module/multi-repo awareness is one real differentiator** (confirmed: see
 [ADR 0009](docs/reference/decisions/0009-graph-topology-and-ip-firewall.md)), but it's not the only
@@ -71,7 +71,7 @@ internal notes out of what you ship, which the scaffolding tools don't touch at 
 - **Commit, governed.** `specguard commit` produces a Conventional Commit (no AI attribution),
   single repo or `--all` across the backup monorepo in configured module order.
 - **Reversible by design.** Repo-owned and machine-owned files are tracked in their respective
-  manifests; auto-updates never clobber your edits outside the managed rules-block, and
+  manifests; auto-updates never clobber your edits outside the managed block, and
   `uninstall`/`uninstall --global` remove the matching scope without touching your content.
 - **Optional graphify enhancer.** When a `graphify-out/` knowledge graph exists, ORIENT/VERIFY use
   it; otherwise it falls back to grep/read. Never required.
@@ -247,7 +247,7 @@ For the full support matrix, install paths, verification steps, and troubleshoot
 
 | Command | Purpose |
 |---------|---------|
-| `init [path] [--agent all\|none\|…] [--with-global\|--no-global] [--scaffold] [--spec-dir …] [--plans-dir …] [--private-dir …] [--scope all]` | Install into a repo (per-agent skill, commands, hooks, rules-block); prompts on a TTY |
+| `init [path] [--agent all\|none\|…] [--with-global\|--no-global] [--scaffold] [--spec-dir …] [--plans-dir …] [--private-dir …] [--scope all]` | Install into a repo (per-agent skill, commands, hooks, managed block); prompts on a TTY |
 | `setup` | Wire this machine's Claude Code / Codex session hooks + Claude statusline |
 | `uninstall [path] [--global] [--purge] [--dry-run]` | Remove spec-guard from a repo, or from this machine |
 | `doctor [path]` | Diagnose install health, repo topology, the IP/deliverable wall, and unfilled convention-doc placeholders |
@@ -271,7 +271,7 @@ Run `specguard <command> --help` for per-command usage, subcommands, and flags.
 | `--scope all` | `init` | Treat the tree as a backup monorepo (record module list for ripple/commit order) |
 | `--scope <a,b>` | `commit` | Commit only the named modules (otherwise `--all` = every impacted one) |
 | `--graphify` | `commit` | Refresh the `graphify-out/` knowledge graph (structural) **before** committing |
-| `--add` | `commit` | Stage all changes first (`git add -A`), then commit |
+| `--add` | `commit` | Stage all changes first (`git add -A`), then commit. Only meaningful for a single repo — `--all`/`--scope` always stage every impacted repo regardless of this flag |
 | `--global` | `uninstall` | Operate on the machine, not a repo |
 | `--purge` | `uninstall --global` | Also forget preferences (XDG config + the on/off flag) |
 | `--dry-run` | `uninstall` | Print the plan and change nothing |
@@ -290,7 +290,7 @@ plain `init .` with no pre-existing rules file), the now-empty file is removed t
 **From a project:**
 
 ```bash
-specguard uninstall .              # remove skill, commands, rules-block, .spec-guard/
+specguard uninstall .              # remove skill, commands, managed block, .spec-guard/
 specguard uninstall . --dry-run    # preview exactly what would be removed
 specguard uninstall . --agent gemini   # remove only one agent's integration
 ```
@@ -323,7 +323,7 @@ Nothing here should ever eat your edits. That's not a promise, it's how it's bui
   edited files are overwritten directly (no sidecar). `self upgrade` refreshes only machine-level
   hooks; per-repo skill files are updated by session-start auto-update, which skips user-edited
   files silently with a count in the session note but does not write a sidecar.
-- **Block-scoped rules.** In rules files spec-guard owns only the delimited block; your prose is
+- **Block-scoped rules.** In rules files spec-guard owns only the managed block; your prose is
   never read into the hash or overwritten.
 - **Reversible.** `uninstall` mirrors repo init through the same path matrix, while
   `uninstall --global` removes machine-owned Claude Code/Codex hooks and home skills.
