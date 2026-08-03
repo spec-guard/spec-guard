@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.14](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.13...cli-v0.3.14) (2026-08-03)
+
+
+### Bug Fixes
+
+* stop config.json drifting from reality in both directions ([7dccc25](https://github.com/spec-guard/spec-guard/commit/7dccc25adaf388ae9bc44cee36109398c4436f80))
+
 ## [0.3.13](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.12...cli-v0.3.13) (2026-08-03)
 
 
