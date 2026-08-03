@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.13](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.12...cli-v0.3.13) (2026-08-03)
+
+
+### Features
+
+* language-aware commit-message style guidance in /spec:commit ([1b7fd58](https://github.com/spec-guard/spec-guard/commit/1b7fd589acd6e66cf2697ec9fca82496860e827f))
+
+
+### Bug Fixes
+
+* preserve existing agents when re-initializing a repo ([671616d](https://github.com/spec-guard/spec-guard/commit/671616d6b42c5074fb2c2f629e01f279664a4c73))
+
 ## [0.3.12](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.11...cli-v0.3.12) (2026-07-10)
 
 
