@@ -164,7 +164,7 @@ Tab-completion for commands, flags, agents, and sub-commands — works on macOS,
 # bash  (macOS/Linux) — add to ~/.bashrc
 eval "$(specguard completion bash)"
 
-# zsh   (macOS default) — add to ~/.zshrc
+# zsh   (macOS default shell — this is what iTerm2 runs too) — add to ~/.zshrc
 eval "$(specguard completion zsh)"
 
 # fish  — write once
