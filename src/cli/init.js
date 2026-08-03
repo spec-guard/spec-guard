@@ -115,6 +115,13 @@ async function run(args) {
     return 1;
   }
 
+  // Re-init never shrinks the configured agent set (ADR 0011) — union with what's already there.
+  // Removing an agent is `uninstall --agent <x>`'s job, not init's.
+  if (alreadyInit) {
+    const existingAgents = config.resolveRepoSettings(repoRoot).agents;
+    agentList = Array.from(new Set([...existingAgents, ...agentList]));
+  }
+
   const specDir = (typeof flags['spec-dir'] === 'string' && flags['spec-dir']) || 'docs/specs';
   const plansDir = (typeof flags['plans-dir'] === 'string' && flags['plans-dir']) || 'docs/plans';
   const privateDir = (typeof flags['private-dir'] === 'string' && flags['private-dir']) || '.private';

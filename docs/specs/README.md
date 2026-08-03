@@ -10,6 +10,8 @@ Status). Paired implementation plans live in [`../plans/`](../plans/); formal de
 | [0001 — spec-guard v1](0001-spec-guard-v1.md) | APPROVED |
 | [0002 — Agent support UX audit](0002-agent-support-ux-audit.md) | IMPLEMENTED |
 | [0003 — README refresh and minimal branding](0003-readme-refresh-and-branding.md) | IMPLEMENTED |
+| [0004 — `init` preserves existing agents on re-init](0004-init-preserves-existing-agents.md) | IMPLEMENTED |
+| [0005 — Commit-message style guidance in `/spec:commit`](0005-commit-message-style-guidance.md) | IMPLEMENTED |
 
 **Status legend:** `PROPOSED` → `APPROVED` → `IMPLEMENTED` → `SUPERSEDED`.
 

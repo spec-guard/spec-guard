@@ -198,6 +198,44 @@ test('init --agent all installs every known agent', () => {
   }
 });
 
+test('re-init with a different --agent unions with the existing config, never shrinks it (ADR 0011)', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'claude-code,codex,github-copilot,opencode,gemini']);
+    // Simulates `doctor`'s own stale-hook repair hint: re-init naming just ONE agent.
+    sg(home, ['init', repo, '--agent', 'gemini', '--force']);
+    const cfg = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.deepStrictEqual(
+      cfg.agents.slice().sort(),
+      ['claude-code', 'codex', 'gemini', 'github-copilot', 'opencode'],
+      'naming one agent on re-init must not drop the others'
+    );
+    for (const f of [
+      '.claude/skills/spec-guard/SKILL.md',
+      '.github/skills/spec-guard/SKILL.md',
+      '.opencode/skill/spec-guard/SKILL.md',
+    ]) assert.ok(fs.existsSync(path.join(repo, f)), `${f} must survive the single-agent re-init`);
+
+    // Bare re-init (no --agent at all, defaults to claude-code non-interactively) must also be a no-op.
+    sg(home, ['init', repo]);
+    const cfg2 = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.deepStrictEqual(cfg2.agents.slice().sort(), ['claude-code', 'codex', 'gemini', 'github-copilot', 'opencode']);
+  } finally {
+    cleanup();
+  }
+});
+
+test('a fresh init is unaffected by the re-init merge (agents = exactly what was resolved)', () => {
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--agent', 'codex']);
+    const cfg = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.deepStrictEqual(cfg.agents, ['codex']);
+  } finally {
+    cleanup();
+  }
+});
+
 test('codex init does not let one repo clobber the home-scoped skill for another repo', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-home-'));
   const repoA = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-repo-a-'));
@@ -262,8 +300,16 @@ test('init without --with-global does not claim "already wired" for an unwired a
     assert.ok(!fs.existsSync(path.join(home, '.codex/skills/spec-guard/SKILL.md')),
       'non-interactive init must still never wire the machine silently');
 
-    const out2 = sg(home, ['init', repo, '--agent', 'claude-code']);
-    assert.match(out2, /already wired/, 'agents covered by the manifest still report already wired');
+    // A separate, fresh repo whose only configured agent (claude-code) IS covered by the manifest
+    // (re-initing `repo` itself here would union in the already-configured `codex`, which is NOT
+    // wired, and correctly stop claiming "already wired" — that's ADR 0011's merge, not this bug).
+    const repo2 = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-repo-'));
+    try {
+      const out2 = sg(home, ['init', repo2, '--agent', 'claude-code']);
+      assert.match(out2, /already wired/, 'agents covered by the manifest still report already wired');
+    } finally {
+      fs.rmSync(repo2, { recursive: true, force: true });
+    }
   } finally {
     cleanup();
   }
