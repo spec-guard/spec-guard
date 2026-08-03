@@ -40,7 +40,7 @@ spec-guard makes different bets:
 | **Agent coverage** | Broad — templates for a long list of editors/agents | Deep on 5: Claude Code, Codex, GitHub Copilot, Gemini CLI, opencode (+ OpenWork) — each wired to its *real* integration surface (hooks, statusline, project memory), not a one-size template. A [capability matrix](docs/reference/decisions/0010-agent-capability-matrix.md) tells you honestly what each agent can and can't do, instead of pretending they're equivalent |
 | **Multi-repo awareness** | Single repo | Understands a workspace that's actually N delivered repos plus a private backup monorepo, and reasons about contract ripple + commit order across repo boundaries |
 | **IP vs. deliverable** | Not addressed | A real wall between what ships to the client (`docs/`) and your internal know-how (`.private/`) — agnostic to whichever agent wrote it, linted by `doctor` |
-| **Re-running / updating** | — | Manifest-guarded: your hand-edits are never clobbered, a `.spec-guard-update` sidecar is written next to the changed file instead |
+| **Re-running / updating** | — | Manifest-guarded: hand-edits to owned files are never clobbered — a `.spec-guard-update` sidecar is written instead. (Edits *inside* the managed rules-block are the one exception: that region always re-syncs to the template, by design) |
 
 So yes — **multi-module/multi-repo awareness is one real differentiator** (confirmed: see
 [ADR 0009](docs/reference/decisions/0009-graph-topology-and-ip-firewall.md)), but it's not the only
@@ -71,8 +71,8 @@ internal notes out of what you ship, which the scaffolding tools don't touch at 
 - **Commit, governed.** `specguard commit` produces a Conventional Commit (no AI attribution),
   single repo or `--all` across the backup monorepo in configured module order.
 - **Reversible by design.** Repo-owned and machine-owned files are tracked in their respective
-  manifests; auto-updates never clobber your edits, and `uninstall`/`uninstall --global` remove the
-  matching scope without touching your content.
+  manifests; auto-updates never clobber your edits outside the managed rules-block, and
+  `uninstall`/`uninstall --global` remove the matching scope without touching your content.
 - **Optional graphify enhancer.** When a `graphify-out/` knowledge graph exists, ORIENT/VERIFY use
   it; otherwise it falls back to grep/read. Never required.
 
@@ -282,9 +282,10 @@ Run `specguard <command> --help` for per-command usage, subcommands, and flags.
 
 spec-guard tracks every repo-scoped file it writes, so removal is exact — it deletes only what it added and
 leaves your `docs/`, specs, plans, and `.private/` untouched. Rules files (`CLAUDE.md`,
-`AGENTS.md`, …) are never deleted; only the managed block between the
-`<!-- spec-guard:start -->` / `<!-- spec-guard:end -->` markers is stripped, preserving your
-surrounding content.
+`AGENTS.md`, …) are stripped, not deleted, when they hold content beyond the managed block — only
+the region between the `<!-- spec-guard:start -->` / `<!-- spec-guard:end -->` markers is removed,
+preserving your surrounding content. If spec-guard's block was the file's *only* content (e.g. a
+plain `init .` with no pre-existing rules file), the now-empty file is removed too.
 
 **From a project:**
 
