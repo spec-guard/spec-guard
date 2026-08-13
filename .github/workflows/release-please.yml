@@ -7,6 +7,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write # OIDC — lets `npm publish` use npm Trusted Publishing instead of NPM_TOKEN
 
 jobs:
   release-please:
