@@ -231,7 +231,7 @@ For the full support matrix, install paths, verification steps, and troubleshoot
 | Codex | `~/.codex/skills/` | — (natural language) | `AGENTS.md` |
 | GitHub Copilot | `.github/skills/` | `.github/prompts/spec-*.prompt.md` | `.github/copilot-instructions.md` |
 | Gemini CLI | `.gemini/extensions/` | `…/commands/spec/*.toml` + `spec.toml` | `GEMINI.md` |
-| opencode (+ OpenWork) | `.opencode/skill/` | `.opencode/command/spec-*.md` + `spec.md` (umbrella) | `AGENTS.md` |
+| opencode (+ OpenWork) | `.opencode/skills/` | `.opencode/commands/spec-*.md` + `spec.md` (umbrella) | `AGENTS.md` |
 
 **Activation and invocation:**
 

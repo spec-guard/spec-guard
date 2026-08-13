@@ -16,7 +16,7 @@ as "install every supported surface", not as "all agents become equivalent".
 | Codex | Partial | Home skill | `AGENTS.md` block | `~/.codex/skills/spec-guard/`, `~/.codex/hooks/spec-guard/`, `~/.codex/hooks.json` | `SessionStart` hook | `SessionStart`, `Stop` | Natural language only | No file-backed slash commands or statusline |
 | GitHub Copilot | Instructional | Repo skill | `.github/skills/spec-guard/`, `.github/prompts/spec-*.prompt.md`, `.github/copilot-instructions.md` block | Nothing | Project instructions | None wired | Prompt files such as `#spec-orient.prompt.md` | No spec-guard lifecycle hook |
 | Gemini CLI | Complete | Repo extension | `.gemini/extensions/spec-guard/` including skill, commands, hooks, `gemini-extension.json`, `GEMINI.md` block | Nothing | Gemini extension hooks | Repo-scoped extension hooks | `/spec`, `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:commit`, `/spec:status` | Extension is repo-scoped, not workstation-wide |
-| opencode / OpenWork | Instructional | Repo skill | `.opencode/skill/spec-guard/`, `.opencode/command/spec-*.md`, `AGENTS.md` block | Nothing | Project memory | None wired | `/spec` (umbrella), `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` | No spec-guard lifecycle hook |
+| opencode / OpenWork | Instructional | Repo skill | `.opencode/skills/spec-guard/`, `.opencode/commands/spec-*.md`, `AGENTS.md` block | Nothing | Project memory | None wired | `/spec` (umbrella), `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` | No spec-guard lifecycle hook |
 
 ## Choosing agents
 
@@ -62,7 +62,7 @@ specguard setup
 
 Repo-scoped files live under the project and are recorded in `.spec-guard/manifest.json`.
 Examples: `.claude/skills/spec-guard/`, `.github/prompts/`, `.gemini/extensions/spec-guard/`,
-`.opencode/command/`, and rules blocks in `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or
+`.opencode/commands/`, and rules blocks in `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or
 `.github/copilot-instructions.md`.
 
 Home-scoped files live under the user's agent directory and are recorded in the global manifest.
@@ -81,7 +81,7 @@ Claude Code or Codex session hooks. Run `specguard doctor` to see that state exp
 | `specguard init . --agent codex` | Repo | `.spec-guard/`, `AGENTS.md` block |
 | `specguard init . --agent github-copilot` | Repo | `.github/skills/spec-guard/`, `.github/prompts/`, `.github/copilot-instructions.md` block |
 | `specguard init . --agent gemini` | Repo | `.gemini/extensions/spec-guard/`, `GEMINI.md` block |
-| `specguard init . --agent opencode` | Repo | `.opencode/skill/spec-guard/`, `.opencode/command/`, `AGENTS.md` block |
+| `specguard init . --agent opencode` | Repo | `.opencode/skills/spec-guard/`, `.opencode/commands/`, `AGENTS.md` block |
 | `specguard setup` | Home | Claude Code and Codex home skills, hook bundles, hook config merge, Claude statusline |
 
 Generated whole files are manifest-owned. If an owned file was locally edited, spec-guard writes a

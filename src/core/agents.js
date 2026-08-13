@@ -78,8 +78,8 @@ const AGENTS = {
     // (opencode's project-memory file); no separate lifecycle hook in v1.
     id: 'opencode',
     displayName: 'opencode',
-    skill: { scope: 'repo', dir: '.opencode/skill/spec-guard' },
-    commands: { dir: '.opencode/command', format: 'opencode-md' },
+    skill: { scope: 'repo', dir: '.opencode/skills/spec-guard' },
+    commands: { dir: '.opencode/commands', format: 'opencode-md' },
     rulesFile: 'AGENTS.md',
     hooks: { kind: 'none', scope: 'home', configPath: null, events: [] },
     capabilities: {

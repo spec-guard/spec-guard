@@ -188,7 +188,7 @@ test('init --agent all installs every known agent', () => {
     for (const f of [
       '.claude/skills/spec-guard/SKILL.md',
       '.github/skills/spec-guard/SKILL.md',
-      '.opencode/skill/spec-guard/SKILL.md',
+      '.opencode/skills/spec-guard/SKILL.md',
       '.gemini/extensions/spec-guard/skills/spec-guard/SKILL.md',
     ]) assert.ok(fs.existsSync(path.join(repo, f)), `missing ${f}`);
     const cfg = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
@@ -213,7 +213,7 @@ test('re-init with a different --agent unions with the existing config, never sh
     for (const f of [
       '.claude/skills/spec-guard/SKILL.md',
       '.github/skills/spec-guard/SKILL.md',
-      '.opencode/skill/spec-guard/SKILL.md',
+      '.opencode/skills/spec-guard/SKILL.md',
     ]) assert.ok(fs.existsSync(path.join(repo, f)), `${f} must survive the single-agent re-init`);
 
     // Bare re-init (no --agent at all, defaults to claude-code non-interactively) must also be a no-op.

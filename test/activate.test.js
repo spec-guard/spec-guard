@@ -207,7 +207,7 @@ test('tryAutoUpdate: opencode-only repo does not get claude-code skill silently 
     'must not silently create claude-code skill tree in opencode-only repo');
   // The opencode file should have been updated (recorded present + file missing → install refresh)
   assert.deepEqual(result, { updated: 1, protectedCount: 0 });
-  const actual = fs.readFileSync(path.join(repoRoot, '.opencode/skill/spec-guard/SKILL.md'), 'utf8');
+  const actual = fs.readFileSync(path.join(repoRoot, '.opencode/skills/spec-guard/SKILL.md'), 'utf8');
   assert.equal(actual, 'skill content');
 });
 

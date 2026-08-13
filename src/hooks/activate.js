@@ -46,7 +46,7 @@ const GLOBAL_SKILL_DIR = path.resolve(__dirname, '..', '..', 'skills', 'spec-gua
 // auto-updated from a repo SessionStart hook (it would write to the wrong location).
 const AGENT_SKILL_DIRS = {
   'claude-code':    '.claude/skills/spec-guard',
-  'opencode':       '.opencode/skill/spec-guard',
+  'opencode':       '.opencode/skills/spec-guard',
   'github-copilot': '.github/skills/spec-guard',
   'gemini':         '.gemini/extensions/spec-guard/skills/spec-guard',
 };
@@ -131,7 +131,7 @@ function tryAutoUpdate(repoRoot, globalSkillDirOverride) {
 
 const REPO_SKILL_LOCATIONS = [
   '.claude/skills/spec-guard/SKILL.md',
-  '.opencode/skill/spec-guard/SKILL.md',
+  '.opencode/skills/spec-guard/SKILL.md',
   '.github/skills/spec-guard/SKILL.md',
   '.gemini/extensions/spec-guard/skills/spec-guard/SKILL.md',
 ];
