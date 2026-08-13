@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.15](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.14...cli-v0.3.15) (2026-08-13)
+
+
+### Bug Fixes
+
+* opencode skill and command dirs must be plural (skills/commands) ([03bee82](https://github.com/spec-guard/spec-guard/commit/03bee82c533fe8ae7c0cc6d16df131c6266532f7))
+
 ## [0.3.14](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.13...cli-v0.3.14) (2026-08-03)
 
 
