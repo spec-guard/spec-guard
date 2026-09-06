@@ -141,16 +141,17 @@ specguard setup                                                       # (re)wire
    | `/spec:sync` | Update the docs/contracts the change affects |
    | `/spec:commit` | Refresh the knowledge graph (if present), then commit (Conventional, no AI attribution) |
    | `/spec:status` | Print the loop checklist and mark the current step (anytime) |
+   | `/spec:coordinate` | Run several specs/ad-hoc requests as independent, parallel fronts — isolated worktree per front, async human-in-the-loop, sequential merge, one final reconciliation |
 
    **By agent:**
 
    | Agent | How to invoke |
    |-------|--------------|
-   | Claude Code | `/spec`, `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:commit`, `/spec:status` |
-   | Codex | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs" |
-   | GitHub Copilot | `#spec.prompt.md` (umbrella) + prompt files: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
+   | Claude Code | `/spec`, `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:commit`, `/spec:status`, `/spec:coordinate` |
+   | Codex | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs", "coordinate these as parallel fronts" |
+   | GitHub Copilot | `#spec.prompt.md` (umbrella) + prompt files: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md`, `#spec-coordinate.prompt.md` |
    | Gemini CLI | Same slash commands as Claude Code |
-   | opencode (+ OpenWork) | `/spec` (umbrella) + `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
+   | opencode (+ OpenWork) | `/spec` (umbrella) + `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status`, `/spec-coordinate` custom commands |
 
 4. **Turn it off / on** anytime: `specguard off` / `specguard on` (persists across sessions).
 5. **Something not working?** `specguard doctor` checks install health, repo topology, and the
@@ -237,11 +238,11 @@ For the full support matrix, install paths, verification steps, and troubleshoot
 
 | Agent | Activates via | Invoke phases |
 |-------|--------------|--------------|
-| Claude Code | SessionStart hook → `~/.claude/settings.json` | `/spec`, `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:commit`, `/spec:status` |
-| Codex | SessionStart hook → `~/.codex/hooks.json` | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs" |
-| GitHub Copilot | Always-on via `.github/copilot-instructions.md` (no hook) | `#spec.prompt.md` (umbrella) + prompt files: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md` |
+| Claude Code | SessionStart hook → `~/.claude/settings.json` | `/spec`, `/spec:orient`, `/spec:write`, `/spec:verify`, `/spec:sync`, `/spec:commit`, `/spec:status`, `/spec:coordinate` |
+| Codex | SessionStart hook → `~/.codex/hooks.json` | Natural language: "orient on this surface", "write the spec", "verify against the spec", "sync the docs", "coordinate these as parallel fronts" |
+| GitHub Copilot | Always-on via `.github/copilot-instructions.md` (no hook) | `#spec.prompt.md` (umbrella) + prompt files: `#spec-orient.prompt.md`, `#spec-write.prompt.md`, `#spec-verify.prompt.md`, `#spec-sync.prompt.md`, `#spec-commit.prompt.md`, `#spec-status.prompt.md`, `#spec-coordinate.prompt.md` |
 | Gemini CLI | Extension hooks → `.gemini/extensions/spec-guard/hooks/hooks.json` | Same slash commands as Claude Code |
-| opencode (+ OpenWork) | Always-on via `AGENTS.md`; OpenWork shares the same config automatically | `/spec` (umbrella) + `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status` custom commands |
+| opencode (+ OpenWork) | Always-on via `AGENTS.md`; OpenWork shares the same config automatically | `/spec` (umbrella) + `/spec-orient`, `/spec-write`, `/spec-verify`, `/spec-sync`, `/spec-commit`, `/spec-status`, `/spec-coordinate` custom commands |
 
 ## Commands
 

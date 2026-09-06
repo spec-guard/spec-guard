@@ -12,6 +12,7 @@ Status). Paired implementation plans live in [`../plans/`](../plans/); formal de
 | [0003 — README refresh and minimal branding](0003-readme-refresh-and-branding.md) | IMPLEMENTED |
 | [0004 — `init` preserves existing agents on re-init](0004-init-preserves-existing-agents.md) | IMPLEMENTED |
 | [0005 — Commit-message style guidance in `/spec:commit`](0005-commit-message-style-guidance.md) | IMPLEMENTED |
+| [0006 — Multi-front coordinator (`/spec:coordinate`)](0006-multi-front-coordinator.md) | IMPLEMENTED |
 
 **Status legend:** `PROPOSED` → `APPROVED` → `IMPLEMENTED` → `SUPERSEDED`.
 

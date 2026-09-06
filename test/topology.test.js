@@ -37,6 +37,21 @@ test('multi-git-root (backup monorepo) detection + modules', () => {
   fs.rmSync(d, { recursive: true, force: true });
 });
 
+test('a subdirectory whose .git is a FILE (a real git worktree, not a repo) is never classified as a module', () => {
+  const d = tmp();
+  fs.mkdirSync(path.join(d, '.git'), { recursive: true });
+  mkgit(d, 'service-a');
+  // A real `git worktree add` presents `.git` as a file containing a `gitdir: ...` pointer, not
+  // a directory — this is the exact shape `coordinate start` would create if its "always a
+  // sibling, never inside the repo" convention were ever violated by a misconfiguration.
+  fs.mkdirSync(path.join(d, 'stray-worktree'), { recursive: true });
+  fs.writeFileSync(path.join(d, 'stray-worktree', '.git'), 'gitdir: /some/other/repo/.git/worktrees/stray-worktree\n');
+  const r = topology.detect(d);
+  assert.deepStrictEqual(r.modules, ['service-a'], 'the worktree-shaped directory must not be counted as a module');
+  assert.strictEqual(topology.isGitRepoDir(path.join(d, 'stray-worktree')), false);
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
 test('.git_backup counts as a module and sets transientGitBackup', () => {
   const d = tmp();
   fs.mkdirSync(path.join(d, '.git'), { recursive: true });

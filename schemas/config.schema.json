@@ -15,6 +15,15 @@
     },
     "modules": { "type": "array", "items": { "type": "string" }, "description": "Deliverable module repo names (backup-monorepo)." },
     "backupMonorepo": { "type": "boolean", "description": "True when this root is a backup monorepo managing deliverable sub-repos." },
-    "manifestVersion": { "type": "integer" }
+    "manifestVersion": { "type": "integer" },
+    "coordination": {
+      "type": "object",
+      "description": "Settings for `specguard coordinate` (multi-front orchestration). All keys optional.",
+      "properties": {
+        "worktreeRoot": { "type": "string", "description": "Where front worktrees are created, resolved relative to the repo root (default: ../.spec-guard-worktrees — always a sibling, never inside the repo)." },
+        "testCommand": { "type": ["string", "null"], "description": "Test-gate command run before a front's sequential merge lands (default: null, falls back to package.json's scripts.test)." },
+        "branchPrefix": { "type": "string", "description": "Prefix for front branch names (default: spec-guard/coord)." }
+      }
+    }
   }
 }

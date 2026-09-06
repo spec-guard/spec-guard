@@ -20,6 +20,7 @@ The loop (run the phase commands in order):
             then  /spec:commit   refresh the knowledge graph (if present), then commit — Conventional, no AI attribution
 
 Anytime:  /spec:status   where am I in the loop      /spec   this map
+          /spec:coordinate   run several specs/features as isolated parallel fronts
 ```
 
 Then:
@@ -27,5 +28,6 @@ Then:
 2. Name the single next action (which phase command to run, or what to do).
 3. Specs live in `${specDir}`; plans in `${plansDir}`. If no spec exists yet for a non-trivial change, the next action is `/spec:write`.
 4. SYNC closes in two steps: `/spec:sync` (docs/contracts consistent), then `/spec:commit` — refresh the knowledge graph (if present) and commit. The change is not done until `/spec:commit` lands.
+5. Coordinating several independent work items at once? `/spec:coordinate` wraps the same loop per front — it doesn't start changing code either.
 
 Keep it short — this is a signpost, not the work itself.

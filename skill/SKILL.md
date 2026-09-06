@@ -77,6 +77,7 @@ Spec-Guard Progress:
 - **Scale & performance — async, concurrency, retry, idempotency, pagination, batch, feature flags, multi-tenancy** → [references/scale-and-performance.md](references/scale-and-performance.md)
 - **Ubiquitous language — project glossary, one term one concept, anti-patterns** → [references/ubiquitous-language.md](references/ubiquitous-language.md)
 - **Multi-module consistency & contract ripple** → [references/multi-module-consistency.md](references/multi-module-consistency.md)
+- **Multi-front coordination — running several parallel loops safely** → [references/multi-front-coordination.md](references/multi-front-coordination.md)
 - **Multi-git-repo & backup-monorepo topology** → [references/multi-git-topology.md](references/multi-git-topology.md)
 - **IP vs deliverable docs + the golden rule** → [references/ip-vs-deliverable.md](references/ip-vs-deliverable.md)
 - **Token economy & context engineering** → [references/token-economy.md](references/token-economy.md)

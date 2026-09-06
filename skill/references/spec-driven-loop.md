@@ -63,6 +63,8 @@ The standard topology for agentic engineering — adopt it even when working sol
 
 For large or parallelizable work, dispatch real subagents per role (implementors on non-overlapping tasks, an independent verifier). Partition at the spec level so agents don't collide.
 
+That's task-level delegation within one spec. For orchestrating several independent specs/features as parallel fronts — each running the full loop in isolation, with async human-in-the-loop and sequential merge — see [multi-front-coordination.md](multi-front-coordination.md).
+
 ## Where specs live
 
 Follow the repo's configured convention:

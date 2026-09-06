@@ -117,7 +117,21 @@ function getFlagPath() {
 // action plans, audits, internal rationale, credentials, internal standards). It is NOT a
 // per-agent dir (.claude/.github/.gemini/.codex are agent *integration*, also non-deliverable
 // but distinct). Default `.private`; configurable per repo.
-const DEFAULTS = Object.freeze({ specDir: 'docs/specs', plansDir: 'docs/plans', privateDir: '.private', commitLanguage: 'en' });
+// `coordination.*` configures `specguard coordinate` (multi-front orchestration): where isolated
+// front worktrees are created (always a sibling of the repo root, never inside it), the test
+// command the sequential-merge gate runs (falls back to `package.json`'s `scripts.test` at
+// runtime when null), and the branch-name prefix for fronts.
+const DEFAULTS = Object.freeze({
+  specDir: 'docs/specs',
+  plansDir: 'docs/plans',
+  privateDir: '.private',
+  commitLanguage: 'en',
+  coordination: Object.freeze({
+    worktreeRoot: '../.spec-guard-worktrees',
+    testCommand: null,
+    branchPrefix: 'spec-guard/coord',
+  }),
+});
 
 // Walk up from startDir to the filesystem root looking for `.spec-guard/config.json`.
 // Returns the absolute path to that file, or null.
@@ -166,6 +180,7 @@ function resolveRepoSettings(startDir) {
     agents: Array.isArray(cfg.agents) ? cfg.agents : [],
     modules: Array.isArray(cfg.modules) ? cfg.modules : [],
     backupMonorepo: cfg.backupMonorepo === true,
+    coordination: Object.assign({}, DEFAULTS.coordination, cfg.coordination || {}),
   };
 }
 

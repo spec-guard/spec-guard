@@ -56,6 +56,7 @@ Shipping the endpoint without 2–6 leaves the contract docs lying — a regress
 - For risky parallel edits, isolate each agent in its own git worktree.
 - Keep one integration point: after parallel work, a single Verifier pass reconciles the contract across modules before commit.
 - When the "monorepo" is actually several deliverable git repos plus a backup monorepo, the ripple crosses repo boundaries — see [multi-git-topology.md](multi-git-topology.md).
+- This section partitions **tasks within one spec/build**. For coordinating **multiple independent specs/features** as isolated parallel fronts — each the full loop, with async human-in-the-loop and sequential merge — see [multi-front-coordination.md](multi-front-coordination.md).
 
 ## How to verify
 

@@ -18,8 +18,17 @@ const path = require('path');
 
 const SKIP_DIRS = new Set(['node_modules', '.git', '.git_backup', '.spec-guard', '.claude', '.codex', '.gemini', '.github', 'graphify-out']);
 
+// A real repo/module has `.git` (or, transiently, `.git_backup`) as a DIRECTORY. A git worktree
+// presents `.git` as a FILE (a `gitdir: ...` pointer) — without this check, a worktree created
+// inside the repo root would be misclassified as a deliverable module. (`specguard coordinate`
+// avoids this primarily by always placing worktrees as a sibling of the repo, never inside it;
+// this is the second line of defense.)
+function isRealGitDir(p) {
+  try { return fs.statSync(p).isDirectory(); } catch (e) { return false; }
+}
+
 function isGitRepoDir(dir) {
-  return fs.existsSync(path.join(dir, '.git')) || fs.existsSync(path.join(dir, '.git_backup'));
+  return isRealGitDir(path.join(dir, '.git')) || isRealGitDir(path.join(dir, '.git_backup'));
 }
 
 function listModules(root) {
