@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.17](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.16...cli-v0.3.17) (2026-09-07)
+
+
+### Bug Fixes
+
+* re-init no longer clobbers module list or spec/plans/private dirs ([854bb8a](https://github.com/spec-guard/spec-guard/commit/854bb8a9c7f54329ef813a920e483da777287ca6))
+
 ## [0.3.16](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.15...cli-v0.3.16) (2026-09-07)
 
 
