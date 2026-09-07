@@ -120,24 +120,36 @@ async function run(args) {
   // that default reflects no real user intent, so it just re-syncs what's already configured.
   // An explicit --agent, or an interactively-typed prompt answer, IS real intent and unions with
   // what's already there. Removing an agent stays `uninstall --agent <x>`'s job, not init's.
+  //
+  // The same principle applies to specDir/plansDir/privateDir: a bare re-init with no explicit
+  // --spec-dir/--plans-dir/--private-dir must preserve whatever is already configured, never fall
+  // back to the hardcoded defaults — those defaults reflect no real intent either, and silently
+  // resetting a repo's real (possibly customized) layout on every re-render would corrupt it.
+  const existingSettings = alreadyInit ? config.resolveRepoSettings(repoRoot) : null;
   if (alreadyInit) {
-    const existingAgents = config.resolveRepoSettings(repoRoot).agents;
+    const existingAgents = existingSettings.agents;
     const silentDefault = !flags.agent && !process.stdin.isTTY;
     agentList = silentDefault ? existingAgents : Array.from(new Set([...existingAgents, ...agentList]));
   }
 
-  const specDir = (typeof flags['spec-dir'] === 'string' && flags['spec-dir']) || 'docs/specs';
-  const plansDir = (typeof flags['plans-dir'] === 'string' && flags['plans-dir']) || 'docs/plans';
-  const privateDir = (typeof flags['private-dir'] === 'string' && flags['private-dir']) || '.private';
+  const specDir = (typeof flags['spec-dir'] === 'string' && flags['spec-dir']) || (existingSettings && existingSettings.specDir) || 'docs/specs';
+  const plansDir = (typeof flags['plans-dir'] === 'string' && flags['plans-dir']) || (existingSettings && existingSettings.plansDir) || 'docs/plans';
+  const privateDir = (typeof flags['private-dir'] === 'string' && flags['private-dir']) || (existingSettings && existingSettings.privateDir) || '.private';
   const force = !!flags.force;
 
   const settings = { specDir, plansDir, privateDir, agents: agentList };
 
   // Topology: record backup-monorepo + module list so the rules/ripple logic is repo-aware.
+  // Same "never silently shrinks" principle as agents above: a live rescan can undercount (a
+  // module mid-checkout, a `.git` transiently renamed, or simply a deeper nesting this version's
+  // scan still doesn't reach) — union with whatever was already configured instead of replacing
+  // it outright, so a re-init can only ever grow/refresh the list, never quietly drop an entry a
+  // human or a prior run already established. Dropping a stale module stays a manual edit.
   const t = topology.detect(repoRoot, { reinit: true });
   if (t.kind === 'multi-git-root' || flags.scope === 'all') {
     settings.backupMonorepo = true;
-    settings.modules = t.modules;
+    const existingModules = (existingSettings && existingSettings.modules) || [];
+    settings.modules = Array.from(new Set([...existingModules, ...t.modules]));
   }
   if (t.kind === 'deliverable-subrepo') {
     process.stdout.write(

@@ -31,21 +31,34 @@ function isGitRepoDir(dir) {
   return isRealGitDir(path.join(dir, '.git')) || isRealGitDir(path.join(dir, '.git_backup'));
 }
 
+// A module can sit inside a plain "grouping" directory that is itself not a git repo (e.g.
+// `api-rag-engine/api-chunker`), not just as a direct child of root. Recurse into any directory
+// that ISN'T itself a git repo, up to MAX_MODULE_DEPTH levels; never recurse INTO a directory
+// once it's identified as a module (a module's own subtree is its own concern, not this repo's
+// module list, and recursing there risks picking up e.g. that module's own nested checkouts).
+const MAX_MODULE_DEPTH = 4;
+
 function listModules(root) {
-  let entries;
-  try {
-    entries = fs.readdirSync(root, { withFileTypes: true });
-  } catch (e) {
-    return [];
-  }
   const modules = [];
-  for (const e of entries) {
-    if (!e.isDirectory() || SKIP_DIRS.has(e.name) || e.name.startsWith('.')) continue;
-    const sub = path.join(root, e.name);
-    if (isGitRepoDir(sub)) {
-      modules.push({ name: e.name, gitDir: fs.existsSync(path.join(sub, '.git')) ? '.git' : '.git_backup' });
+  function walk(dir, relPrefix, depth) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch (e) {
+      return;
+    }
+    for (const e of entries) {
+      if (!e.isDirectory() || SKIP_DIRS.has(e.name) || e.name.startsWith('.')) continue;
+      const sub = path.join(dir, e.name);
+      const relName = relPrefix ? `${relPrefix}/${e.name}` : e.name;
+      if (isGitRepoDir(sub)) {
+        modules.push({ name: relName, gitDir: fs.existsSync(path.join(sub, '.git')) ? '.git' : '.git_backup' });
+      } else if (depth < MAX_MODULE_DEPTH) {
+        walk(sub, relName, depth + 1);
+      }
     }
   }
+  walk(root, '', 1);
   return modules;
 }
 

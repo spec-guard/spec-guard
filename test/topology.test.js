@@ -37,6 +37,37 @@ test('multi-git-root (backup monorepo) detection + modules', () => {
   fs.rmSync(d, { recursive: true, force: true });
 });
 
+test('a module nested inside a plain (non-git) grouping directory is still found, at any depth up to the bound', () => {
+  // Real-world shape: `api-rag-engine/` is just a folder, not a repo itself, but
+  // `api-rag-engine/api-chunker/` is. A single-level scan misses this entirely.
+  const d = tmp();
+  fs.mkdirSync(path.join(d, '.git'), { recursive: true });
+  mkgit(d, 'service-a');
+  fs.mkdirSync(path.join(d, 'api-rag-engine', 'api-chunker', '.git'), { recursive: true });
+  fs.mkdirSync(path.join(d, 'api-rag-engine', 'api-loader', '.git'), { recursive: true });
+  // Three levels deep, still within the bound.
+  fs.mkdirSync(path.join(d, 'group-a', 'group-b', 'deep-service', '.git'), { recursive: true });
+  const r = topology.detect(d);
+  assert.strictEqual(r.kind, 'multi-git-root');
+  assert.deepStrictEqual(
+    r.modules.sort(),
+    ['api-rag-engine/api-chunker', 'api-rag-engine/api-loader', 'group-a/group-b/deep-service', 'service-a'].sort()
+  );
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('does not recurse INTO a module\'s own subtree looking for more modules', () => {
+  const d = tmp();
+  fs.mkdirSync(path.join(d, '.git'), { recursive: true });
+  mkgit(d, 'service-a');
+  mkgit(d, 'service-b');
+  // A nested git dir INSIDE service-a must never be picked up as a separate module of the root.
+  fs.mkdirSync(path.join(d, 'service-a', 'vendor', 'something', '.git'), { recursive: true });
+  const r = topology.detect(d);
+  assert.deepStrictEqual(r.modules.sort(), ['service-a', 'service-b']);
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
 test('a subdirectory whose .git is a FILE (a real git worktree, not a repo) is never classified as a module', () => {
   const d = tmp();
   fs.mkdirSync(path.join(d, '.git'), { recursive: true });

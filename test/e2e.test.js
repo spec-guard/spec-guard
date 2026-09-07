@@ -225,6 +225,61 @@ test('re-init with a different --agent unions with the existing config, never sh
   }
 });
 
+test('a bare re-init preserves an already-configured specDir/plansDir/privateDir instead of resetting to the defaults', () => {
+  // Regression: a real repo (serpro/estaleiro) had specDir:"specs", plansDir:"specs/plans",
+  // privateDir:"." — a bare re-init (no explicit --spec-dir/--plans-dir/--private-dir) silently
+  // reset all three to the hardcoded defaults, because init read the flags with a literal
+  // fallback instead of falling back to what was already configured.
+  const { home, repo, cleanup } = sandbox();
+  try {
+    sg(home, ['init', repo, '--spec-dir', 'specs', '--plans-dir', 'specs/plans', '--private-dir', '.', '--agent', 'claude-code']);
+    const cfg1 = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.strictEqual(cfg1.specDir, 'specs');
+    assert.strictEqual(cfg1.plansDir, 'specs/plans');
+    assert.strictEqual(cfg1.privateDir, '.');
+
+    sg(home, ['init', repo]);
+    const cfg2 = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.strictEqual(cfg2.specDir, 'specs', 'must not reset to the docs/specs default');
+    assert.strictEqual(cfg2.plansDir, 'specs/plans', 'must not reset to the docs/plans default');
+    assert.strictEqual(cfg2.privateDir, '.', 'must not reset to the .private default');
+  } finally {
+    cleanup();
+  }
+});
+
+test('re-init unions the module list instead of replacing it, so a re-render can never silently drop a module', () => {
+  // Regression: a real backup monorepo (serpro/llmcatalog) had modules nested inside plain
+  // grouping directories (e.g. api-rag-engine/api-chunker); a re-init blindly overwrote
+  // config.modules with a live rescan, which — before the topology.js recursion fix — silently
+  // dropped every nested entry. This test guards the OTHER half of the fix: even if some future
+  // rescan under-reports (a module mid-checkout, a transient .git rename, a nesting depth the
+  // scan doesn't reach), re-init must union with what was already configured, never replace it.
+  const { home, repo, cleanup } = sandbox();
+  try {
+    fs.mkdirSync(path.join(repo, '.git'));
+    for (const m of ['service-a', 'service-b']) fs.mkdirSync(path.join(repo, m, '.git'), { recursive: true });
+    sg(home, ['init', repo, '--agent', 'claude-code']);
+    const cfg1 = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.deepStrictEqual(cfg1.modules.slice().sort(), ['service-a', 'service-b']);
+
+    // Hand-add a module the live scan will NOT see this time (removed on disk here, standing in
+    // for "the scan under-reports for any reason") directly to config.json.
+    cfg1.modules.push('legacy-service');
+    fs.writeFileSync(path.join(repo, '.spec-guard', 'config.json'), JSON.stringify(cfg1));
+
+    sg(home, ['init', repo, '--force']);
+    const cfg2 = JSON.parse(fs.readFileSync(path.join(repo, '.spec-guard/config.json'), 'utf8'));
+    assert.deepStrictEqual(
+      cfg2.modules.slice().sort(),
+      ['legacy-service', 'service-a', 'service-b'],
+      'a re-init must never silently drop a module the config already had, only add to it'
+    );
+  } finally {
+    cleanup();
+  }
+});
+
 test('a bare non-interactive re-init does not silently add the claude-code default', () => {
   const { home, repo, cleanup } = sandbox();
   try {
