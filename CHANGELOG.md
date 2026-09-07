@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.16](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.15...cli-v0.3.16) (2026-09-07)
+
+
+### Features
+
+* add multi-front coordinator (specguard coordinate / /spec:coordinate) ([78eb7aa](https://github.com/spec-guard/spec-guard/commit/78eb7aa9b1fe80489bf827c07bdf447d3a294e61))
+
 ## [0.3.15](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.14...cli-v0.3.15) (2026-08-13)
 
 
