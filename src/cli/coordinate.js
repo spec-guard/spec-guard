@@ -797,7 +797,15 @@ function cmdMerge(flags) {
       }
 
       const preSha = git(gitRoot, ['rev-parse', 'HEAD']).stdout.trim();
-      const mergeRes = git(gitRoot, ['merge', '--no-ff', '--no-edit', wt.branch]);
+      // `-m` with an explicit, generic message — never `--no-edit` (git's default merge message
+      // is `Merge branch '<branch>'`, and the front's working branch name embeds this tool's own
+      // internal vocabulary: `spec-guard/coord/<runId>/<laneId>--<module>`). That branch name is
+      // scratch state, deleted once the lane lands (or by `coordinate finish --purge-worktrees`);
+      // the merge commit is what a delivered repo's history actually carries. A commit message
+      // that names the tool or the run's internal id is exactly the kind of leak downstream IP
+      // audits flag and block a first push over — found the hard way in a real coordinated run.
+      const mergeMessage = `Merge: ${laneId}${wt.module ? '/' + wt.module : ''}`;
+      const mergeRes = git(gitRoot, ['merge', '--no-ff', '-m', mergeMessage, wt.branch]);
       if (mergeRes.status !== 0) {
         git(gitRoot, ['merge', '--abort']);
         const detail = `${mergeRes.stdout || ''}${mergeRes.stderr || ''}`.trim().slice(0, 2000);

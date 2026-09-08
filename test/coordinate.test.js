@@ -293,6 +293,27 @@ test('merge reverts the merge (git reset --hard) and blocks the lane when the te
   fs.rmSync(base, { recursive: true, force: true });
 });
 
+test('merge writes a generic commit message — never git\'s default, which would leak the internal branch name', () => {
+  const { base, d, g } = gitRepo();
+  fs.writeFileSync(path.join(d, 'a.txt'), 'x\n');
+  g(['add', '-A']); g(['commit', '-q', '-m', 'init']);
+
+  const lanesFile = writeLanes(d, [{ id: 'minha-feature', kind: 'adhoc', description: 'a', declaredPaths: ['feature.txt'] }]);
+  capture(() => coordinate.run(['plan', '--root', d, '--run-id', 'r28', '--file', lanesFile]));
+  capture(() => coordinate.run(['start', '--root', d, '--run', 'r28']));
+  const wt = readLane(d, 'r28', 'minha-feature').worktrees[0];
+  commitInWorktree(wt.path, 'feature.txt', 'feat: add feature');
+  capture(() => coordinate.run(['report', '--root', d, '--run', 'r28', '--lane', 'minha-feature', '--status', 'verified']));
+
+  capture(() => coordinate.run(['merge', '--root', d, '--run', 'r28', '--test-cmd', 'true']));
+
+  const msg = g(['log', '-1', '--format=%B']).stdout;
+  assert.strictEqual(msg.trim(), 'Merge: minha-feature');
+  assert.doesNotMatch(msg, /spec-guard/i, 'must never leak the tool name into a commit a user might publish');
+  assert.doesNotMatch(msg, new RegExp(wt.branch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'must never leak the internal branch name (git\'s --no-edit default does exactly this)');
+  fs.rmSync(base, { recursive: true, force: true });
+});
+
 test('merge with no resolvable test command fails closed and refuses to merge', () => {
   const { base, d, g } = gitRepo();
   fs.writeFileSync(path.join(d, 'a.txt'), 'x\n');
