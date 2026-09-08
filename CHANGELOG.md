@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.18](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.17...cli-v0.3.18) (2026-09-08)
+
+
+### Bug Fixes
+
+* **coordinate:** merge writes an explicit message instead of git's --no-edit default ([a59e8fb](https://github.com/spec-guard/spec-guard/commit/a59e8fb494756a68b8a79d9987f99131b2638d98))
+
 ## [0.3.17](https://github.com/spec-guard/spec-guard/compare/cli-v0.3.16...cli-v0.3.17) (2026-09-07)
 
 
